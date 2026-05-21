@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "dgSpecHash": "YaJGCmHYFEQ=",
+  "success": true,
+  "projectFilePath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj",
+  "expectedPackageFiles": [
+    "/Users/rocelcodilla/.nuget/packages/microsoft.aspnetcore.identity.entityframeworkcore/10.0.8/microsoft.aspnetcore.identity.entityframeworkcore.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.data.sqlite.core/10.0.8/microsoft.data.sqlite.core.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.entityframeworkcore/10.0.8/microsoft.entityframeworkcore.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.entityframeworkcore.abstractions/10.0.8/microsoft.entityframeworkcore.abstractions.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.entityframeworkcore.analyzers/10.0.8/microsoft.entityframeworkcore.analyzers.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.entityframeworkcore.relational/10.0.8/microsoft.entityframeworkcore.relational.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.entityframeworkcore.sqlite/10.0.8/microsoft.entityframeworkcore.sqlite.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.entityframeworkcore.sqlite.core/10.0.8/microsoft.entityframeworkcore.sqlite.core.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.8/microsoft.extensions.dependencyinjection.abstractions.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/microsoft.extensions.dependencymodel/10.0.8/microsoft.extensions.dependencymodel.10.0.8.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.11/sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/sqlitepclraw.core/2.1.11/sqlitepclraw.core.2.1.11.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.11/sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/rocelcodilla/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.11/sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1510",
+      "level": "Warning",
+      "message": "PackageReference Microsoft.Extensions.DependencyInjection.Abstractions will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
+      "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj",
+      "warningLevel": 1,
+      "filePath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj",
+      "libraryId": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
+}

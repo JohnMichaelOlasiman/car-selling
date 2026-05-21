@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Saved Cars";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="animate-fade-in-up" x-data="savedCarsApp()">
+    <div class="mb-8">
+        <h1 class="text-3xl font-display font-bold text-white mb-2">Saved Cars ❤️</h1>
+        <p class="text-surface-400">Cars you've fallen in love with in the marketplace</p>
+    </div>
+
+    @* Empty State *@
+    <div x-show="savedList.length === 0" class="card p-12 text-center max-w-lg mx-auto" x-cloak>
+        <span class="text-5xl block mb-4">❤️</span>
+        <h3 class="text-lg font-display font-bold text-white mb-2">Your wishlist is currently empty</h3>
+        <p class="text-xs text-surface-500 mb-6">Explore our curated collections of supercars and muscle cars to save your favorites.</p>
+        <a href="/Cars/Browse" class="btn-primary">Browse Vehicles</a>
+    </div>
+
+    @* Wishlist Grid *@
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="savedList.length > 0">
+        <template x-for="car in savedList" :key="car.id">
+            <div class="card p-5 group hover:border-primary-500/20 transition-all duration-300 relative overflow-hidden"
+                 x-transition:leave="transition ease-in duration-300 transform scale-95 opacity-0">
+                <div class="flex items-start gap-4">
+                    <a :href="'/Cars/Details/' + car.id" class="w-20 h-20 rounded-xl overflow-hidden bg-surface-800 flex-shrink-0">
+                        <img :src="car.image" class="w-full h-full object-cover" />
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <a :href="'/Cars/Details/' + car.id"
+                           class="block text-base font-display font-bold text-white truncate hover:text-primary-400 transition-colors"
+                           x-text="car.name"></a>
+                        <p class="text-lg font-display font-bold text-gradient mb-1" x-text="car.price"></p>
+                        <p class="text-[11px] text-surface-500" x-text="car.mileage + ' • ' + car.transmission + ' • ' + car.fuelType + ' • ' + car.location"></p>
+                    </div>
+
+                    @* Remove Heart Button *@
+                    <button x-on:click="removeCar(car)"
+                            class="flex-shrink-0 p-2 rounded-xl text-pink-400 bg-pink-500/10 hover:bg-pink-500/20 transition-all duration-300">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                            <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    @* ── Undo Toast Notification ── *@
+    <div class="fixed bottom-6 right-6 z-50 pointer-events-none flex flex-col items-end gap-3">
+        <div x-show="toastOpen" x-cloak
+             x-transition:enter="transition ease-out duration-300 transform translate-y-4 opacity-0"
+             x-transition:enter-end="transform translate-y-0 opacity-100"
+             x-transition:leave="transition ease-in duration-200 transform translate-y-4 opacity-0"
+             class="pointer-events-auto bg-surface-900 border border-surface-800 p-4 rounded-2xl shadow-elevated flex items-center gap-4 max-w-sm">
+            <span class="text-xl">💔</span>
+            <div class="flex-1">
+                <p class="text-xs font-semibold text-white">Removed from Wishlist</p>
+                <p class="text-[10px] text-surface-500" x-text="removedCarName"></p>
+            </div>
+            <button x-on:click="undo()" class="px-3 py-1.5 rounded-lg bg-primary-500/15 text-primary-400 text-xs font-bold hover:bg-primary-500/25 transition-all">
+                Undo
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function savedCarsApp() {
+    const rawCars = JSON.parse('@Html.Raw(ViewBag.AllCarsJson)');
+
+    return {
+        allCars: rawCars,
+        savedList: [],
+        toastOpen: false,
+        lastRemovedCar: null,
+        removedCarName: '',
+        toastTimeout: null,
+
+        init() {
+            this.loadSaved();
+        },
+
+        loadSaved() {
+            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+            this.savedList = this.allCars.filter(c => likedIds.includes(c.id));
+        },
+
+        removeCar(car) {
+            this.lastRemovedCar = car;
+            this.removedCarName = car.name;
+
+            // Remove from array and local storage
+            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+            likedIds = likedIds.filter(id => id !== car.id);
+            localStorage.setItem('likedCars', JSON.stringify(likedIds));
+
+            this.loadSaved();
+
+            // Open Toast
+            this.toastOpen = true;
+            if (this.toastTimeout) clearTimeout(this.toastTimeout);
+
+            this.toastTimeout = setTimeout(() => {
+                this.toastOpen = false;
+            }, 6000);
+        },
+
+        undo() {
+            if (!this.lastRemovedCar) return;
+
+            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+            if (!likedIds.includes(this.lastRemovedCar.id)) {
+                likedIds.push(this.lastRemovedCar.id);
+                localStorage.setItem('likedCars', JSON.stringify(likedIds));
+            }
+
+            this.loadSaved();
+            this.toastOpen = false;
+            this.lastRemovedCar = null;
+        }
+    };
+}
+</script>
+}

@@ -1,0 +1,239 @@
+@model List<RevvUp.Web.Models.CarCardViewModel>
+@{
+    ViewData["Title"] = "Compare Cars";
+}
+
+<div class="pt-20 min-h-screen" x-data="revvCompare()">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        @* ── Header ── *@
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-display font-bold text-white tracking-tight">
+                    ⚖️ Side-by-Side <span class="text-gradient">Comparison</span>
+                </h1>
+                <p class="text-surface-400 text-sm mt-1">Compare specifications, performance, and pricing of up to 4 vehicles.</p>
+            </div>
+            <a href="/Cars/Browse" class="btn-primary btn-sm">
+                + Add More Cars
+            </a>
+        </div>
+
+        @if (Model == null || Model.Count == 0)
+        {
+            @* ── Empty State ── *@
+            <div class="card p-12 text-center max-w-xl mx-auto animate-fade-in-up">
+                <div class="text-6xl mb-4">⚖️</div>
+                <h3 class="text-2xl font-display font-bold text-white mb-2">No cars to compare</h3>
+                <p class="text-surface-400 mb-6">Go to our browsing page and click the "Add to Compare" button on any vehicle to see a side-by-side technical comparison.</p>
+                <a href="/Cars/Browse" class="btn-primary">Browse Inventory</a>
+            </div>
+        }
+        else
+        {
+            @* ── Comparison Sheet ── *@
+            <div class="card overflow-hidden overflow-x-auto border border-surface-800/80">
+                <table class="w-full text-left border-collapse min-w-[700px]">
+                    @* Image & Remove Headers *@
+                    <thead>
+                        <tr class="bg-surface-900/50 border-b border-surface-800/80">
+                            <th class="p-6 text-xs font-bold text-surface-500 uppercase tracking-wider w-1/5 min-w-[150px]">Specifications</th>
+                            @foreach (var car in Model)
+                            {
+                                <th class="p-6 text-center w-1/4 relative group min-w-[200px]" id="compare-col-@car.Id">
+                                    <div class="space-y-4">
+                                        @* Remove button *@
+                                        <button x-on:click="removeCar('@car.Id')"
+                                                class="absolute top-3 right-3 w-7 h-7 rounded-full bg-surface-950/80 border border-surface-800 text-surface-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/30 flex items-center justify-center transition-all duration-300">
+                                            ✕
+                                        </button>
+
+                                        @* Image *@
+                                        <a href="/Cars/Details/@car.Id" class="block aspect-video rounded-xl overflow-hidden bg-surface-800 border border-surface-800/80">
+                                            <img src="@car.ImageUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        </a>
+
+                                        @* Info *@
+                                        <div class="space-y-1">
+                                            <a href="/Cars/Details/@car.Id" class="block font-display font-bold text-white hover:text-primary-400 transition-colors text-sm truncate">
+                                                @car.FullName
+                                            </a>
+                                            <p class="text-lg font-display font-extrabold text-gradient">@car.FormattedPrice</p>
+                                        </div>
+                                    </div>
+                                </th>
+                            }
+                            @* Fill up empty slots up to 4 *@
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <th class="p-6 text-center bg-surface-900/10 border-l border-surface-800/40 opacity-40 min-w-[200px]">
+                                    <div class="h-44 border-2 border-dashed border-surface-800 rounded-2xl flex flex-col items-center justify-center gap-2">
+                                        <span class="text-2xl text-surface-600">⚖️</span>
+                                        <a href="/Cars/Browse" class="text-xs text-primary-400 hover:underline">Add slot</a>
+                                    </div>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+
+                    @* Specifications Table Body *@
+                    <tbody class="divide-y divide-surface-800/40 text-sm">
+                        @* Brand *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">🏷️ Brand</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Make</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Model *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">🚘 Model</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Model</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Year *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">📅 Year</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Year</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Mileage *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">🛣️ Mileage</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.FormattedMileage</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Body Type *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">🚗 Body Type</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.BodyType</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Fuel Type *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">⛽ Fuel Type</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.FuelType</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Transmission *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">⚙️ Transmission</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Transmission</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Color *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">🎨 Color</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Color</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Location *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">📍 Location</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Location</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Actions *@
+                        <tr class="bg-surface-900/10">
+                            <td class="p-6 font-semibold text-surface-400">🚀 Actions</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-6 text-center">
+                                    <a href="/Cars/Details/@car.Id" class="btn-primary btn-sm inline-flex justify-center w-full">
+                                        View Details
+                                    </a>
+                                </td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-6 text-center text-surface-600 italic">-</td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function revvCompare() {
+    return {
+        removeCar(id) {
+            let compareIds = JSON.parse(localStorage.getItem('compareCars') || '[]');
+            compareIds = compareIds.filter(carId => carId !== id);
+            localStorage.setItem('compareCars', JSON.stringify(compareIds));
+
+            // Reload page with updated queries
+            if (compareIds.length === 0) {
+                window.location.href = '/Cars/Compare';
+            } else {
+                window.location.href = '/Cars/Compare?ids=' + compareIds.join(',');
+            }
+        }
+    };
+}
+</script>
+}

@@ -1,0 +1,518 @@
+@using RevvUp.Web.Models
+@model RevvUp.Web.Models.CarCardViewModel
+@{
+    ViewData["Title"] = Model.FullName;
+}
+
+<div class="pt-20 min-h-screen bg-surface-950 text-surface-200" x-data="revvDetails('@Model.Price', '@Model.Id')">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        @* ── Breadcrumb ── *@
+        <nav class="flex items-center gap-2 text-xs text-surface-500 mb-6 uppercase tracking-wider font-semibold">
+            <a href="/" class="hover:text-white transition-colors">Home</a>
+            <svg class="w-3 h-3 text-surface-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" stroke-width="2"/></svg>
+            <a asp-controller="Cars" asp-action="Browse" class="hover:text-white transition-colors">Browse</a>
+            <svg class="w-3 h-3 text-surface-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" stroke-width="2"/></svg>
+            <span class="text-white font-medium">@Model.FullName</span>
+        </nav>
+
+        @* ── Title & Price Header ── *@
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-surface-850 pb-8">
+            <div>
+                <h1 class="text-3xl sm:text-5xl font-display font-black text-white tracking-tight">@Model.FullName</h1>
+                <div class="flex flex-wrap items-center gap-3 mt-3 text-xs uppercase tracking-wider font-bold">
+                    <span class="badge-primary">@Model.Year</span>
+                    <span class="badge-accent">@Model.BodyType</span>
+                    <span class="flex items-center gap-1 text-surface-400 font-semibold">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0 1 15 0Z"/></svg>
+                        @Model.Location
+                    </span>
+                </div>
+            </div>
+            <div class="text-left md:text-right">
+                <p class="text-[10px] text-surface-500 font-bold uppercase tracking-widest">Market Value</p>
+                <p class="text-3xl sm:text-4xl font-display font-black text-gradient mt-1">@Model.FormattedPrice</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            @* ── Column 1 & 2: Interactive Media Center ── *@
+            <div class="lg:col-span-2 space-y-8">
+                @* Media Switcher *@
+                <div class="card overflow-hidden">
+                    <div class="flex border-b border-surface-850 bg-surface-900/50">
+                        <button x-on:click="activeMediaTab = 'gallery'"
+                                class="flex-1 py-4 text-xs font-bold uppercase tracking-wider text-center transition-all duration-200 border-b-2"
+                                x-bind:class="activeMediaTab === 'gallery' ? 'text-white border-primary-500 bg-white/5' : 'text-surface-400 border-transparent hover:text-white'">
+                            High-Res Gallery
+                        </button>
+                        <button x-on:click="activeMediaTab = '3d'"
+                                class="flex-1 py-4 text-xs font-bold uppercase tracking-wider text-center transition-all duration-200 border-b-2"
+                                x-bind:class="activeMediaTab === '3d' ? 'text-white border-primary-500 bg-white/5' : 'text-surface-400 border-transparent hover:text-white'">
+                            Interactive 3D Viewer
+                        </button>
+                    </div>
+
+                    @* Gallery View *@
+                    <div x-show="activeMediaTab === 'gallery'" class="relative aspect-video bg-surface-950">
+                        <img x-bind:src="activeGalleryImage" alt="Car Showcase"
+                             class="w-full h-full object-cover transition-all duration-300" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent pointer-events-none"></div>
+
+                        @* Thumbnail Strips *@
+                        <div class="absolute bottom-4 left-4 right-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                            <template x-for="(img, index) in galleryImages" :key="index">
+                                <button x-on:click="activeGalleryImage = img"
+                                        class="w-20 h-14 rounded overflow-hidden border-2 flex-shrink-0 transition-all duration-200"
+                                        x-bind:class="activeGalleryImage === img ? 'border-primary-500 scale-105 shadow-md' : 'border-surface-850 opacity-60 hover:opacity-100'">
+                                    <img x-bind:src="img" class="w-full h-full object-cover" />
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    @* 3D Viewer Section *@
+                    <div x-show="activeMediaTab === '3d'" class="relative aspect-video bg-surface-950 flex flex-col justify-between p-6 overflow-hidden">
+                        <div class="absolute inset-0 pointer-events-none">
+                            <div class="absolute top-10 left-10 w-48 h-48 bg-primary-500/5 rounded-full blur-3xl"></div>
+                        </div>
+
+                        @* Top Controls *@
+                        <div class="relative z-10 flex items-center justify-between">
+                            <span class="text-xs text-primary-400 font-bold uppercase tracking-wider">3D Configurator</span>
+                            <div class="flex gap-2">
+                                <button x-on:click="toggleViewMode('exterior')"
+                                        class="px-3 py-1.5 rounded text-xs font-semibold border transition-all duration-200"
+                                        x-bind:class="viewerMode === 'exterior' ? 'bg-primary-500 text-white border-primary-500 shadow-md' : 'bg-surface-850 text-surface-400 border-surface-800 hover:text-white'">
+                                    Exterior
+                                </button>
+                                <button x-on:click="toggleViewMode('interior')"
+                                        class="px-3 py-1.5 rounded text-xs font-semibold border transition-all duration-200"
+                                        x-bind:class="viewerMode === 'interior' ? 'bg-primary-500 text-white border-primary-500 shadow-md' : 'bg-surface-850 text-surface-400 border-surface-800 hover:text-white'">
+                                    Interior (360)
+                                </button>
+                            </div>
+                        </div>
+
+                        @* 3D Simulation Frame *@
+                        <div class="relative flex-1 flex items-center justify-center">
+                            <div class="text-center space-y-4" x-show="viewerMode === 'exterior'">
+                                <div class="w-72 h-44 mx-auto relative animate-float transition-all duration-300" x-bind:style="'filter: hue-rotate(' + activeColorHue + 'deg)'">
+                                    <img src="@Model.ImageUrl" class="w-full h-full object-contain" />
+                                </div>
+                                <p class="text-[10px] text-surface-500 uppercase tracking-widest font-semibold">Dynamic Hue Configurator | Select shades below</p>
+                            </div>
+                            <div class="text-center w-full h-full absolute inset-0 bg-cover bg-center transition-all duration-500 filter brightness-[0.7]"
+                                 x-show="viewerMode === 'interior'"
+                                 style="background-image: url('https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=1200&q=80');">
+                                <div class="absolute inset-0 bg-gradient-to-t from-surface-950 to-transparent"></div>
+                                <div class="absolute bottom-6 left-6 right-6">
+                                    <p class="text-base font-display font-bold text-white">Panoramic Cockpit View</p>
+                                    <p class="text-[10px] text-surface-400 uppercase tracking-widest mt-1">Simulated 360 cockpit inspection</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Bottom Color Selector *@
+                        <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-surface-850 pt-4" x-show="viewerMode === 'exterior'">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-surface-400 font-bold uppercase tracking-wider">Paint Palette:</span>
+                                <template x-for="color in bodyColors" :key="color.name">
+                                    <button x-on:click="activeColorHue = color.hue; activeColorName = color.name"
+                                            class="w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110"
+                                            x-bind:style="'background-color: ' + color.hex"
+                                            x-bind:class="activeColorName === color.name ? 'border-white shadow-md' : 'border-transparent'">
+                                    </button>
+                                </template>
+                            </div>
+                            <span class="text-xs text-primary-400 font-bold uppercase tracking-wider" x-text="activeColorName"></span>
+                        </div>
+                    </div>
+                </div>
+
+                @* ── Tabbed Information Details Section ── *@
+                <div class="card p-6">
+                    <div class="flex border-b border-surface-850 gap-2 mb-6">
+                        <template x-for="tab in infoTabs" :key="tab.id">
+                            <button x-on:click="activeInfoTab = tab.id"
+                                    class="px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-200 border-b-2"
+                                    x-bind:class="activeInfoTab === tab.id ? 'text-primary-400 border-primary-500 bg-primary-500/5' : 'text-surface-400 border-transparent hover:text-white'">
+                                <span x-text="tab.name"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    @* Tab Content: Overview *@
+                    <div x-show="activeInfoTab === 'overview'" x-transition class="space-y-4">
+                        <h3 class="text-base font-bold text-white uppercase tracking-wider">Vehicle Profile</h3>
+                        <p class="text-surface-400 text-sm leading-relaxed">@Model.Description</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
+                            <div class="p-4 rounded bg-surface-900 border border-surface-850">
+                                <p class="text-[10px] text-surface-500 font-bold uppercase tracking-wider">Listed On</p>
+                                <p class="text-sm font-semibold text-white mt-1">@Model.CreatedAt.ToString("MMMM dd, yyyy")</p>
+                            </div>
+                            <div class="p-4 rounded bg-surface-900 border border-surface-850">
+                                <p class="text-[10px] text-surface-500 font-bold uppercase tracking-wider">Condition</p>
+                                <p class="text-sm font-semibold text-white mt-1">Certified Mint</p>
+                            </div>
+                            <div class="p-4 rounded bg-surface-900 border border-surface-850">
+                                <p class="text-[10px] text-surface-500 font-bold uppercase tracking-wider">Drive Type</p>
+                                <p class="text-sm font-semibold text-white mt-1">All-Wheel Drive</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Tab Content: Specifications *@
+                    <div x-show="activeInfoTab === 'specs'" x-transition class="space-y-4">
+                        <h3 class="text-base font-bold text-white uppercase tracking-wider">Technical Specifications</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Make</span>
+                                <span class="text-white font-semibold">@Model.Make</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Model</span>
+                                <span class="text-white font-semibold">@Model.Model</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Year</span>
+                                <span class="text-white font-semibold">@Model.Year</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Price</span>
+                                <span class="text-white font-semibold">@Model.FormattedPrice</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Mileage</span>
+                                <span class="text-white font-semibold">@Model.FormattedMileage</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Fuel Type</span>
+                                <span class="text-white font-semibold">@Model.FuelType</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Transmission</span>
+                                <span class="text-white font-semibold">@Model.Transmission</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Color</span>
+                                <span class="text-white font-semibold">@Model.Color</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Tab Content: Features *@
+                    <div x-show="activeInfoTab === 'features'" x-transition class="space-y-4">
+                        <h3 class="text-base font-bold text-white uppercase tracking-wider">Standard Features</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-surface-300">
+                            <div class="flex items-center gap-2 font-medium">• Apple CarPlay & Android Auto</div>
+                            <div class="flex items-center gap-2 font-medium">• Heated Leather Steering Wheel</div>
+                            <div class="flex items-center gap-2 font-medium">• Panoramic Dual-Pane Sunroof</div>
+                            <div class="flex items-center gap-2 font-medium">• Premium Surround Sound System</div>
+                            <div class="flex items-center gap-2 font-medium">• Adaptive Cruise Control</div>
+                            <div class="flex items-center gap-2 font-medium">• 360-Degree Surround Camera</div>
+                        </div>
+                    </div>
+
+                    @* Tab Content: Seller Info *@
+                    <div x-show="activeInfoTab === 'seller'" x-transition class="space-y-4">
+                        <h3 class="text-base font-bold text-white uppercase tracking-wider">Merchant Profile</h3>
+                        <div class="flex items-center gap-4 p-4 rounded bg-surface-900 border border-surface-850">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-xs">
+                                RM
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">RevvUp Certified Premium Merchant</p>
+                                <p class="text-[10px] text-primary-400 font-bold uppercase tracking-wider mt-0.5">Verified Dealer Partner</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-surface-500 leading-relaxed">Every certified listing is backed by complete vehicle checks, pre-screened merchant validation, and seamless documentation transfers.</p>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Column 3: Actions Panel & EMI Calculator ── *@
+            <div class="space-y-8">
+                @* Actions Console Card *@
+                <div class="card p-6 space-y-4">
+                    <h3 class="text-base font-bold text-white uppercase tracking-wider">Acquisition Console</h3>
+                    <div class="space-y-3">
+                        <button x-on:click="contactModalOpen = true"
+                                class="btn-primary w-full justify-center"
+                                id="details-contact-btn">
+                            Contact Certified Dealer
+                        </button>
+
+                        <button x-on:click="toggleWishlist()"
+                                class="w-full justify-center transition-all duration-200"
+                                x-bind:class="isLiked ? 'btn bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'btn-outline'">
+                            <span x-text="isLiked ? 'Added to Favorites' : 'Save to Favorites'"></span>
+                        </button>
+
+                        <button x-on:click="toggleComparison()"
+                                class="w-full btn-outline justify-center transition-all duration-200"
+                                x-bind:class="isInComparison ? 'border-primary-500 text-primary-400 bg-primary-500/5' : ''"
+                                id="details-compare-btn">
+                            <span x-text="isInComparison ? 'In Comparison List' : 'Compare Vehicle'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                @* Animated EMI Calculator *@
+                <div class="card p-6 space-y-5 relative overflow-hidden">
+                    <h3 class="text-base font-bold text-white uppercase tracking-wider">Financial Estimator</h3>
+
+                    @* Down Payment Slider *@
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-semibold text-surface-400">
+                            <span>Down Payment</span>
+                            <span class="text-white" x-text="formattedDownPayment"></span>
+                        </div>
+                        <input type="range" x-model="downPaymentPercentage" min="10" max="80" step="5"
+                               class="w-full h-1 bg-surface-800 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                               x-on:input="calculateEMI()" />
+                        <div class="flex justify-between text-[10px] text-surface-500 font-semibold">
+                            <span>10% (Min)</span>
+                            <span>80% (Max)</span>
+                        </div>
+                    </div>
+
+                    @* Tenure Dropdown *@
+                    <div class="space-y-2">
+                        <label class="block text-xs font-semibold text-surface-400">Loan Tenure</label>
+                        <select x-model="loanTenureMonths" x-on:change="calculateEMI()" class="input text-xs py-2">
+                            <option value="12">12 Months (1 Year)</option>
+                            <option value="24">24 Months (2 Years)</option>
+                            <option value="36">36 Months (3 Years)</option>
+                            <option value="48">48 Months (4 Years)</option>
+                            <option value="60">60 Months (5 Years)</option>
+                        </select>
+                    </div>
+
+                    @* Interest Rate Slider *@
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-semibold text-surface-400">
+                            <span>Interest Rate</span>
+                            <span class="text-white" x-text="interestRate + '%'"></span>
+                        </div>
+                        <input type="range" x-model="interestRate" min="4.5" max="15.0" step="0.1"
+                               class="w-full h-1 bg-surface-800 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                               x-on:input="calculateEMI()" />
+                    </div>
+
+                    <div class="divider"></div>
+
+                    @* Computed Results *@
+                    <div class="p-4 rounded bg-surface-950 border border-surface-850 text-center space-y-1">
+                        <p class="text-[10px] text-surface-500 font-bold uppercase tracking-wider">Estimated Monthly EMI</p>
+                        <p class="text-2xl font-display font-black text-primary-400 mt-1" x-text="monthlyEMI"></p>
+                        <p class="text-[9px] text-surface-500 uppercase font-semibold">₱<span x-text="loanAmount"></span> Loan Principal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ── Similar Cars Section ── *@
+        @if (ViewBag.SimilarCars != null && ((List<CarCardViewModel>)ViewBag.SimilarCars).Count > 0)
+        {
+            <div class="mt-20 border-t border-surface-850 pt-16">
+                <h3 class="text-xl font-display font-bold text-white mb-8">Similar Verified Vehicles</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    @foreach (var car in (List<CarCardViewModel>)ViewBag.SimilarCars)
+                    {
+                        <div class="card overflow-hidden hover:shadow-card-hover hover:-translate-y-1 hover:border-primary-500/30 transition-all duration-300 ease-out group relative"
+                             x-data="{ liked: false }">
+                            <a href="/Cars/Details/@car.Id" class="block relative h-48 overflow-hidden bg-surface-850">
+                                <img src="@car.ImageUrl" alt="@car.FullName" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent"></div>
+                                <div class="absolute bottom-3 left-3">
+                                    <p class="text-base font-display font-bold text-white drop-shadow-md">@car.FormattedPrice</p>
+                                </div>
+                            </a>
+                            <div class="p-5">
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                    <a href="/Cars/Details/@car.Id" class="text-sm font-display font-bold text-white truncate group-hover:text-primary-400 transition-colors">@car.FullName</a>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[11px] text-surface-400">
+                                    <span>@car.FormattedMileage</span>
+                                    <span>•</span>
+                                    <span>@car.Transmission</span>
+                                    <span>•</span>
+                                    <span>@car.FuelType</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    @* ── Contact Seller Modal ── *@
+    <div x-show="contactModalOpen" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-950/80 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="card max-w-md w-full p-6 space-y-4 relative"
+             x-on:click.away="contactModalOpen = false"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+            
+            <button x-on:click="contactModalOpen = false" class="absolute top-4 right-4 text-surface-500 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" stroke-width="2"/></svg>
+            </button>
+
+            <h3 class="text-lg font-bold text-white uppercase tracking-wider">Inquire Product</h3>
+            <p class="text-xs text-surface-400 leading-relaxed">Request details about the <span class="text-white font-semibold">@Model.FullName</span> priced at @Model.FormattedPrice.</p>
+
+            <div x-show="inquirySubmitted" class="p-4 rounded bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
+                <p class="text-sm font-bold text-emerald-400">Inquiry Dispatched Successfully</p>
+                <p class="text-xs text-surface-400">Our certified dealer will reach out to you via your supplied email coordinates.</p>
+                <button x-on:click="contactModalOpen = false; inquirySubmitted = false" class="btn bg-surface-850 hover:bg-surface-800 text-white w-full btn-sm">Close Console</button>
+            </div>
+
+            <form x-show="!inquirySubmitted" x-on:submit.prevent="submitMessage()" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-1">Your Name</label>
+                    <input type="text" class="input text-xs py-2" placeholder="John Doe" required />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-1">Your Email</label>
+                    <input type="email" class="input text-xs py-2" placeholder="john@example.com" required />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-1">Message Detail</label>
+                    <textarea class="input text-xs h-24 py-2" placeholder="Hello, I am interested in this vehicle. Is it still available?" required></textarea>
+                </div>
+                <button type="submit" class="btn-primary w-full justify-center">
+                    Dispatch Inquiry
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function revvDetails(carPriceStr, carId) {
+    const rawPrice = parseFloat(carPriceStr.replace(/[^0-9.-]+/g, '')) || 1000000;
+
+    return {
+        activeMediaTab: 'gallery',
+        activeGalleryImage: '@Model.ImageUrl',
+        galleryImages: [
+            '@Model.ImageUrl',
+            'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&q=80',
+            'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&q=80',
+            'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80'
+        ],
+        viewerMode: 'exterior',
+        activeColorHue: 0,
+        activeColorName: 'Factory Stock',
+        bodyColors: [
+            { name: 'Factory Stock', hex: '#475569', hue: 0 },
+            { name: 'Championship Red', hex: '#b91c1c', hue: 130 },
+            { name: 'Electric Blue', hex: '#1d4ed8', hue: 220 },
+            { name: 'Imperial Purple', hex: '#6d28d9', hue: 280 }
+        ],
+        infoTabs: [
+            { id: 'overview', name: 'Overview' },
+            { id: 'specs', name: 'Specifications' },
+            { id: 'features', name: 'Features' },
+            { id: 'seller', name: 'Seller Info' }
+        ],
+        activeInfoTab: 'overview',
+        contactModalOpen: false,
+        inquirySubmitted: false,
+
+        // ── Wishlist State ──
+        isLiked: false,
+
+        // ── Compare List State ──
+        isInComparison: false,
+
+        // ── EMI State ──
+        downPaymentPercentage: 20,
+        loanTenureMonths: 36,
+        interestRate: 7.5,
+        monthlyEMI: '₱0',
+        loanAmount: '0',
+
+        init() {
+            this.calculateEMI();
+            this.checkWishlist();
+            this.checkComparison();
+        },
+
+        toggleViewMode(mode) {
+            this.viewerMode = mode;
+        },
+
+        // ── Wishlist Operations ──
+        checkWishlist() {
+            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+            this.isLiked = likedIds.includes(carId);
+        },
+        toggleWishlist() {
+            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+            if (likedIds.includes(carId)) {
+                likedIds = likedIds.filter(id => id !== carId);
+                this.isLiked = false;
+            } else {
+                likedIds.push(carId);
+                this.isLiked = true;
+            }
+            localStorage.setItem('likedCars', JSON.stringify(likedIds));
+            window.dispatchEvent(new Event('storage'));
+        },
+
+        // ── Comparison Operations ──
+        checkComparison() {
+            let compareIds = JSON.parse(localStorage.getItem('compareCars') || '[]');
+            this.isInComparison = compareIds.includes(carId);
+        },
+        toggleComparison() {
+            let compareIds = JSON.parse(localStorage.getItem('compareCars') || '[]');
+            if (compareIds.includes(carId)) {
+                compareIds = compareIds.filter(id => id !== carId);
+                this.isInComparison = false;
+            } else {
+                if (compareIds.length >= 4) {
+                    alert('Maximum of 4 vehicles can be selected for comparison.');
+                    return;
+                }
+                compareIds.push(carId);
+                this.isInComparison = true;
+            }
+            localStorage.setItem('compareCars', JSON.stringify(compareIds));
+            window.dispatchEvent(new Event('storage'));
+        },
+
+        // ── EMI Calculator math ──
+        calculateEMI() {
+            const principal = rawPrice * (1 - this.downPaymentPercentage / 100);
+            const ratePerMonth = (this.interestRate / 12) / 100;
+            const tenure = parseInt(this.loanTenureMonths);
+
+            const emi = (principal * ratePerMonth * Math.pow(1 + ratePerMonth, tenure)) / (Math.pow(1 + ratePerMonth, tenure) - 1);
+
+            this.loanAmount = Math.round(principal).toLocaleString();
+            this.monthlyEMI = isNaN(emi) ? '₱0' : '₱' + Math.round(emi).toLocaleString();
+        },
+
+        get formattedDownPayment() {
+            const value = rawPrice * (this.downPaymentPercentage / 100);
+            return '₱' + Math.round(value).toLocaleString() + ' (' + this.downPaymentPercentage + '%)';
+        },
+
+        submitMessage() {
+            this.inquirySubmitted = true;
+        }
+    };
+}
+</script>
+}

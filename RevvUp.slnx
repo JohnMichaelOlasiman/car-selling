@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RevvUp.Application/RevvUp.Application.csproj" />
+    <Project Path="src/RevvUp.Core/RevvUp.Core.csproj" />
+    <Project Path="src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj" />
+    <Project Path="src/RevvUp.Web/RevvUp.Web.csproj" />
+  </Folder>
+</Solution>

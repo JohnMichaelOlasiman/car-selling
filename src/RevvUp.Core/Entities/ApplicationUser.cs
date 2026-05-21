@@ -1,0 +1,25 @@
+// ============================================================
+// RevvUp.Core — ApplicationUser Entity
+// Extends IdentityUser with RevvUp-specific profile fields
+// ============================================================
+
+using Microsoft.AspNetCore.Identity;
+
+namespace RevvUp.Core.Entities;
+
+/// <summary>
+/// Extended user entity for RevvUp.
+/// Adds display name, avatar, bio, and profile customization.
+/// </summary>
+public class ApplicationUser : IdentityUser
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public string? AvatarUrl { get; set; }
+    public string? Bio { get; set; }
+    public string? Location { get; set; }
+    public string? PhoneNumber2 { get; set; }
+    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDealer { get; set; }
+    public int TotalListings { get; set; }
+    public int TotalSales { get; set; }
+}

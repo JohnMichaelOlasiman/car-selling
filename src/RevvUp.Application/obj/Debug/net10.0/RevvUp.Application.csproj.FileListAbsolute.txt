@@ -1,0 +1,15 @@
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/bin/Debug/net10.0/RevvUp.Application.deps.json
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/bin/Debug/net10.0/RevvUp.Application.dll
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/bin/Debug/net10.0/RevvUp.Application.pdb
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/bin/Debug/net10.0/RevvUp.Core.dll
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/bin/Debug/net10.0/RevvUp.Core.pdb
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.csproj.AssemblyReference.cache
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.AssemblyInfoInputs.cache
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.AssemblyInfo.cs
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.csproj.CoreCompileInputs.cache
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.A.E6663456.Up2Date
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.dll
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/refint/RevvUp.Application.dll
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/RevvUp.Application.pdb
+/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/Debug/net10.0/ref/RevvUp.Application.dll
