@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RevvUp.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f472af2204b59f81f1359b32f8fc4cab12699303")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dd83165a6be9d9175202bd9681a2fc6d8cc0e7c1")]
 [assembly: System.Reflection.AssemblyProductAttribute("RevvUp.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RevvUp.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

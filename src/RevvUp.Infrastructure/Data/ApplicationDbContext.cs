@@ -166,9 +166,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             // Deterministic Guid generation
             var carId = Guid.Parse($"00000000-0000-0000-0000-000000000{i + 1:D3}");
 
-            // Generate 6 placeholder image URLs programmatically using placehold.co
-            var urls = string.Join(";", Enumerable.Range(1, 6)
-                .Select(num => $"https://placehold.co/800x600/1a1f2e/3b82f6?text={spec.Brand.Replace(" ", "+")}+{spec.Model.Replace(" ", "+")}+{num}"));
+            // Generate 6 high-quality real image URLs using Unsplash photo IDs matching the car specs
+            var primaryUnsplashId = GetPrimaryUnsplashId(spec.Brand, spec.Model);
+            var detailIds = new[]
+            {
+                "1563720223185-11003d516935", // Luxury Interior Seats
+                "1600706432502-75a0e08f58b9", // Premium Digital Cockpit
+                "1614162692292-7ac56d7f7f1e", // Sporty Alloy Wheel Rim
+                "1617814076367-b759c7d7e738", // LED Laser Headlight
+                "1580273916550-e323be2ae537"  // Premium Quad Exhaust Taillights
+            };
+
+            var urlsList = new List<string>
+            {
+                $"https://images.unsplash.com/photo-{primaryUnsplashId}?auto=format&fit=crop&w=800&h=600&q=80"
+            };
+            foreach (var detailId in detailIds)
+            {
+                urlsList.Add($"https://images.unsplash.com/photo-{detailId}?auto=format&fit=crop&w=800&h=600&q=80");
+            }
+            var urls = string.Join(";", urlsList);
 
             seededCars.Add(new Car
             {
@@ -195,5 +212,126 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         }
 
         builder.Entity<Car>().HasData(seededCars);
+    }
+
+    private static string GetPrimaryUnsplashId(string brand, string model)
+    {
+        return brand.ToLower() switch
+        {
+            "toyota" => model.ToLower() switch
+            {
+                "camry hybrid" => "1621007947382-bb3c3994e3fb", // Camry White
+                "rav4 awd" => "1606577924006-27d39b132ee6", // RAV4 White
+                "gr supra" => "1618843479313-40f8afb4b4d8", // Red Supra
+                "corolla le" => "1590362891991-f776e747a588", // Corolla style
+                "land cruiser" => "1533473359331-0135ef1b58bf", // Land Cruiser / Offroad SUV
+                _ => "1621007947382-bb3c3994e3fb"
+            },
+            "honda" => model.ToLower() switch
+            {
+                "civic type r" => "1629897048514-3dd7414fe72a", // Civic Type R White
+                "accord sport" => "1592853625527-711cb857ee0e", // Accord Black
+                "cr-v hybrid" => "1618278943112-9c9abde6a6e2", // CR-V Blue SUV
+                "civic sedan" => "1502877338535-766e1452684a", // Silver sedan
+                _ => "1629897048514-3dd7414fe72a"
+            },
+            "bmw" => model.ToLower() switch
+            {
+                "m4 competition" => "1617814076367-b759c7d7e738", // BMW M4 Green
+                "330i xdrive" => "1555215695-3004980ad54e", // BMW 330i Blue
+                "x5 xdrive40i" => "1533473359331-0135ef1b58bf", // BMW X5 Black SUV
+                "540i m sport" => "1549399542-7e3f8b79c341", // BMW 5 Series Gray
+                _ => "1555215695-3004980ad54e"
+            },
+            "mercedes-benz" => model.ToLower() switch
+            {
+                "c300" => "1617531653332-bd46c24f2068", // Mercedes C300 Silver
+                "amg gt 63" => "1618843479619-f4198754b209", // Mercedes AMG GT Black
+                "gle 450" => "1549399542-7e3f8b79c341", // Mercedes GLE White
+                "e450 all-terrain" => "1503376780353-7e6692767b70", // Mercedes E Wagon Gray
+                _ => "1617531653332-bd46c24f2068"
+            },
+            "audi" => model.ToLower() switch
+            {
+                "rs e-tron gt" => "1606016159991-dfe4f2746ad5", // Audi e-tron GT Gray
+                "a4 s-line" => "1606016159991-dfe4f2746ad5", // Audi A4 Blue
+                "q7 premium" => "1533473359331-0135ef1b58bf", // Audi Q7 Black
+                "a6 allroad" => "1549399542-7e3f8b79c341", // Audi A6 Silver
+                _ => "1606016159991-dfe4f2746ad5"
+            },
+            "tesla" => model.ToLower() switch
+            {
+                "model 3 lr" => "1617788138017-80ad40651399", // Tesla Model 3 Blue
+                "model y performance" => "1563720223185-11003d516935", // Tesla Model Y White
+                "model s plaid" => "1619767886558-efdc259cde1a", // Tesla Model S Black
+                _ => "1617788138017-80ad40651399"
+            },
+            "ford" => model.ToLower() switch
+            {
+                "mustang gt" => "1584345604476-8ec5e12e42dd", // Ford Mustang Red
+                "explorer xlt" => "1533473359331-0135ef1b58bf", // Ford Explorer Gray
+                "bronco outer banks" => "1606577924006-27d39b132ee6", // Ford Bronco Green
+                "f-150 lariat" => "1533560904424-a0c61dc306fc", // Ford F-150 Black
+                _ => "1584345604476-8ec5e12e42dd"
+            },
+            "hyundai" => model.ToLower() switch
+            {
+                "ioniq 5 n" => "1617788138017-80ad40651399", // Hyundai Ioniq 5 Blue
+                "elantra n" => "1621007947382-bb3c3994e3fb", // Hyundai Elantra Black
+                "tucson hybrid" => "1606577924006-27d39b132ee6", // Hyundai Tucson Silver
+                "palisade calligraphy" => "1533473359331-0135ef1b58bf", // Hyundai Palisade White
+                _ => "1621007947382-bb3c3994e3fb"
+            },
+            "mazda" => model.ToLower() switch
+            {
+                "cx-5 turbo" => "1606577924006-27d39b132ee6", // Mazda CX-5 Red
+                "premium" => "1621007947382-bb3c3994e3fb", // Mazda 3 Gray
+                "mx-5 miata" => "1552519507-da3b142c6e3d", // Mazda Miata Blue
+                _ => "1552519507-da3b142c6e3d"
+            },
+            "mazda 3" => "1621007947382-bb3c3994e3fb", // Mazda 3
+            "nissan" => model.ToLower() switch
+            {
+                "gt-r premium" => "1580273916550-e323be2ae537", // Nissan GTR Silver
+                "altima sr" => "1502877338535-766e1452684a", // Nissan Altima Black
+                "rogue sv" => "1533473359331-0135ef1b58bf", // Nissan Rogue White
+                _ => "1580273916550-e323be2ae537"
+            },
+            "porsche" => model.ToLower() switch
+            {
+                "911 carrera s" => "1614162692292-7ac56d7f7f1e", // Porsche 911 Gray
+                "cayenne coupe" => "1503376780353-7e6692767b70", // Porsche Cayenne Black
+                "taycan 4s" => "1611245706969-9069d3b76e27", // Porsche Taycan Red
+                _ => "1614162692292-7ac56d7f7f1e"
+            },
+            "lexus" => model.ToLower() switch
+            {
+                "lc 500" => "1544829099-b9a0c07fad1a", // Lexus LC 500 Yellow
+                "rx 350 f sport" => "1533473359331-0135ef1b58bf", // Lexus RX White
+                "es 300h" => "1549399542-7e3f8b79c341", // Lexus ES Silver
+                _ => "1544829099-b9a0c07fad1a"
+            },
+            "chevrolet" => model.ToLower() switch
+            {
+                "corvette z06" => "1600706432502-75a0e08f58b9", // Chevy Corvette Red
+                "silverado 1500" => "1533560904424-a0c61dc306fc", // Chevy Silverado Gray
+                "equinox premier" => "1533473359331-0135ef1b58bf", // Chevy Equinox Blue
+                _ => "1600706432502-75a0e08f58b9"
+            },
+            "volkswagen" => model.ToLower() switch
+            {
+                "golf r" => "1616422285623-13ff0162193c", // VW Golf R Blue
+                "tiguan sel" => "1533473359331-0135ef1b58bf", // VW Tiguan White
+                _ => "1616422285623-13ff0162193c"
+            },
+            "subaru" => model.ToLower() switch
+            {
+                "wrx sti" => "1605559424843-9e4c228bf1c2", // Subaru WRX STI Blue
+                "outback onyx" => "1533473359331-0135ef1b58bf", // Subaru Outback Green
+                "forester sport" => "1606577924006-27d39b132ee6", // Subaru Forester Gray
+                _ => "1605559424843-9e4c228bf1c2"
+            },
+            _ => "1503376780353-7e6692767b70" // fallback generic luxury black car
+        };
     }
 }
