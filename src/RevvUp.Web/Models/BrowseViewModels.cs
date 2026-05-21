@@ -3,13 +3,16 @@
 // Filter state, paging, and car card data for the browse page
 // ============================================================
 
+using System;
+using System.Collections.Generic;
+
 namespace RevvUp.Web.Models;
 
 public class BrowseViewModel
 {
     // ── Filter State ──
     public string? Search { get; set; }
-    public string? Make { get; set; }
+    public string? Brand { get; set; }
     public string? BodyType { get; set; }
     public string? FuelType { get; set; }
     public string? Transmission { get; set; }
@@ -29,7 +32,7 @@ public class BrowseViewModel
     public bool HasMore => Page * PageSize < TotalCount;
 
     // ── Filter Options (for sidebar dropdowns) ──
-    public List<string> AvailableMakes { get; set; } = new();
+    public List<string> AvailableBrands { get; set; } = new();
     public List<string> AvailableBodyTypes { get; set; } = new();
     public List<string> AvailableFuelTypes { get; set; } = new();
     public List<string> AvailableTransmissions { get; set; } = new();
@@ -39,32 +42,35 @@ public class BrowseViewModel
 public class CarCardViewModel
 {
     public Guid Id { get; set; }
-    public string Make { get; set; } = string.Empty;
+    public string Brand { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
-    public string FullName => $"{Year} {Make} {Model}";
+    public string FullName => $"{Year} {Brand} {Model}";
     public int Year { get; set; }
     public decimal Price { get; set; }
-    public string FormattedPrice => $"₱{Price:N0}";
-    public string ImageUrl { get; set; } = string.Empty;
+    public string FormattedPrice => $"${Price:N0}";
+    public string ImageUrls { get; set; } = string.Empty;
+    public string PrimaryImageUrl => ImageUrls.Split(';', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image";
     public int Mileage { get; set; }
-    public string FormattedMileage => $"{Mileage:N0} km";
+    public string FormattedMileage => $"{Mileage:N0} mi";
     public string FuelType { get; set; } = string.Empty;
     public string Transmission { get; set; } = string.Empty;
     public string BodyType { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
-    public string Location { get; set; } = string.Empty;
+    public string Condition { get; set; } = string.Empty;
     public bool IsFeatured { get; set; }
     public string Description { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    public DateTime DateAdded { get; set; }
+    public string Features { get; set; } = string.Empty;
+    public string Status { get; set; } = "Available";
     public string TimeAgo
     {
         get
         {
-            var diff = DateTime.UtcNow - CreatedAt;
+            var diff = DateTime.UtcNow - DateAdded;
             if (diff.TotalHours < 1) return "Just now";
             if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
             if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
-            return CreatedAt.ToString("MMM dd");
+            return DateAdded.ToString("MMM dd");
         }
     }
 }

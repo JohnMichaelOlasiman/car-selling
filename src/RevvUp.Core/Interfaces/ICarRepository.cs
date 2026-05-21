@@ -4,13 +4,15 @@
 // Infrastructure layer implements them.
 // ============================================================
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using RevvUp.Core.Entities;
 
 namespace RevvUp.Core.Interfaces;
 
 /// <summary>
-/// Repository contract for Car entities.
-/// Implemented by Infrastructure layer — Core has zero knowledge of databases.
+/// Repository contract for Car, Inquiry, ChatMessage, and Favorite entities.
 /// </summary>
 public interface ICarRepository
 {
@@ -21,4 +23,19 @@ public interface ICarRepository
     Task AddAsync(Car car);
     Task UpdateAsync(Car car);
     Task DeleteAsync(Guid id);
+
+    // ── Inquiry Operations ──
+    Task AddInquiryAsync(Inquiry inquiry);
+    Task<IEnumerable<Inquiry>> GetInquiriesByUserIdAsync(string userId);
+    Task<Inquiry?> GetInquiryByIdAsync(Guid id);
+
+    // ── Chat Message Operations ──
+    Task AddChatMessageAsync(ChatMessage message);
+    Task<IEnumerable<ChatMessage>> GetChatMessagesByInquiryIdAsync(Guid inquiryId);
+
+    // ── Favorite Operations ──
+    Task AddFavoriteAsync(Favorite favorite);
+    Task RemoveFavoriteAsync(string userId, Guid carId);
+    Task<IEnumerable<Favorite>> GetFavoritesByUserIdAsync(string userId);
+    Task<bool> IsFavoriteAsync(string userId, Guid carId);
 }

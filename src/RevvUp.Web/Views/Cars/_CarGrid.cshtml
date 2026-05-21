@@ -8,21 +8,46 @@
         return JSON.parse(localStorage.getItem('likedCars') || '[]').includes(this.id);
     },
     toggleLike() {
-        let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
-        if (list.includes(this.id)) {
-            list = list.filter(item => item !== this.id);
-        } else {
-            list.push(this.id);
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <text>
+            window.location.href = '/Account/Login';
+            return;
+            </text>
         }
-        localStorage.setItem('likedCars', JSON.stringify(list));
-        window.dispatchEvent(new Event('storage'));
+        else
+        {
+            <text>
+            fetch(`/Cars/ToggleFavorite/${this.id}`, { method: 'POST' })
+                .then(res => {
+                    if (res.status === 401) {
+                        window.location.href = '/Account/Login';
+                        return;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && typeof data.favorited !== 'undefined') {
+                        let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                        if (data.favorited) {
+                            if (!list.includes(this.id)) list.push(this.id);
+                        } else {
+                            list = list.filter(item => item !== this.id);
+                        }
+                        localStorage.setItem('likedCars', JSON.stringify(list));
+                        window.dispatchEvent(new Event('storage'));
+                    }
+                })
+                .catch(err => console.error(err));
+            </text>
+        }
     }
 }">
     <div class="card-interactive overflow-hidden">
         @* ── Image Container ── *@
         <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"
            class="block relative h-52 overflow-hidden bg-surface-850">
-            <img src="@car.ImageUrl" alt="@car.FullName" loading="lazy"
+            <img src="@car.PrimaryImageUrl" alt="@car.FullName" loading="lazy"
                  class="w-full h-full object-cover transition-transform duration-700 ease-out
                         group-hover:scale-105" />
             @* Gradient overlay *@
@@ -58,7 +83,7 @@
                 <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"
                    class="text-base font-display font-bold text-white truncate
                           group-hover:text-primary-400 transition-colors">
-                    @car.FullName
+                     @car.FullName
                 </a>
                 @* ── Heart Wishlist Button ── *@
                 <button x-on:click.stop.prevent="toggleLike()"
@@ -89,7 +114,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0 1 15 0Z" />
                     </svg>
-                    @car.Location
+                    Curated Inventory
                 </span>
                 <a asp-controller="Cars" asp-action="Details" asp-route-id="@car.Id"
                    class="text-xs font-medium text-primary-400 hover:text-primary-300 transition-colors

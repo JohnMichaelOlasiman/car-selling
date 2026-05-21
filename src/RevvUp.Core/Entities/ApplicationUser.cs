@@ -4,6 +4,7 @@
 // ============================================================
 
 using Microsoft.AspNetCore.Identity;
+using System;
 
 namespace RevvUp.Core.Entities;
 
@@ -19,7 +20,4 @@ public class ApplicationUser : IdentityUser
     public string? Location { get; set; }
     public string? PhoneNumber2 { get; set; }
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
-    public bool IsDealer { get; set; }
-    public int TotalListings { get; set; }
-    public int TotalSales { get; set; }
 }

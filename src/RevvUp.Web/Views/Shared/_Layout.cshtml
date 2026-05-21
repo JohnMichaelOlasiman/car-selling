@@ -3,6 +3,14 @@
    Premium dark-mode automotive platform
    Uses: Tailwind CSS 3, Alpine.js, HTMX
    ============================================================ *@
+@inject Microsoft.AspNetCore.Identity.UserManager<RevvUp.Core.Entities.ApplicationUser> UserManager
+@{
+    RevvUp.Core.Entities.ApplicationUser? currentUser = null;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        currentUser = await UserManager.GetUserAsync(User);
+    }
+}
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -32,6 +40,21 @@
       x-init="updateCompare(); updateFavorites(); window.addEventListener('storage', () => { updateCompare(); updateFavorites(); }); setInterval(() => { updateCompare(); updateFavorites(); }, 1000);"
       x-on:keydown.escape="mobileMenuOpen = false">
 
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        var currentUserId = UserManager.GetUserId(User);
+        var favoriteService = Context.RequestServices.GetService<RevvUp.Application.Interfaces.ICarService>();
+        if (favoriteService != null && !string.IsNullOrEmpty(currentUserId))
+        {
+            var favList = await favoriteService.GetFavoritesByUserIdAsync(currentUserId);
+            var favIds = favList.Select(f => f.CarId.ToString().ToLower()).ToList();
+            var favIdsJson = System.Text.Json.JsonSerializer.Serialize(favIds);
+            <script>
+                localStorage.setItem('likedCars', '@Html.Raw(favIdsJson)');
+            </script>
+        }
+    }
+
     @* ── NAVBAR ── *@
     <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
             x-data="{ scrolled: false }"
@@ -46,15 +69,12 @@
                 @* ── Logo ── *@
                 <a href="/" class="flex items-center gap-3 group" id="nav-logo">
                     <div class="relative">
-                        <!-- Logo icon — stylized speedometer/steering wheel -->
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700
+                        <!-- New Logo image -->
+                        <div class="w-10 h-10 rounded-xl bg-surface-900/50 border border-surface-800/40 p-1.5
                                     flex items-center justify-center
                                     shadow-glow-sm group-hover:shadow-glow
                                     transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
-                            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
+                            <img src="~/images/logo.png" class="w-full h-full object-contain" alt="RevvUp Logo" asp-append-version="true" />
                         </div>
                         <!-- Glow ring -->
                         <div class="absolute -inset-1 rounded-xl bg-primary-500/20 blur-sm
@@ -69,8 +89,7 @@
                 <div class="hidden md:flex items-center gap-1" id="nav-desktop-menu">
                     <a href="/" class="nav-link">Home</a>
                     <a href="/Cars/Browse" class="nav-link">Browse Cars</a>
-                    <a href="/Dashboard/MyListings" class="nav-link">Sell Your Car</a>
-                    <a href="#" class="nav-link">How It Works</a>
+                    <a href="#how-it-works" class="nav-link">How It Works</a>
                     <a href="#" class="nav-link">About</a>
                 </div>
 
@@ -102,8 +121,8 @@
 
                         @* ── Notifications Dropdown ── *@
                         <div class="relative" x-data="{ notificationsOpen: false, notifications: [
-                            { id: 1, title: '🏎️ Welcome to RevvUp!', body: 'Post your first listing today and rev up your sell speed!' },
-                            { id: 2, title: '🔒 Access Granted', body: 'You are now an authorized racer in the community.' }
+                            { id: 1, title: 'Welcome to RevvUp!', body: 'Post your first listing today and start selling.' },
+                            { id: 2, title: 'Access Granted', body: 'You are now an authorized member in the community.' }
                         ] }" x-on:click.away="notificationsOpen = false">
                             <button x-on:click="notificationsOpen = !notificationsOpen"
                                     class="btn-ghost btn-sm relative"
@@ -136,7 +155,7 @@
                                         </div>
                                     </template>
                                     <div x-show="notifications.length === 0" class="text-center py-6 text-xs text-surface-500 italic">
-                                        All caught up! 🏁
+                                        All caught up!
                                     </div>
                                 </div>
                             </div>
@@ -149,11 +168,18 @@
                                     class="flex items-center gap-2 px-2 py-1.5 rounded-xl
                                            hover:bg-white/5 transition-all duration-300"
                                     id="nav-profile-btn">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-accent-500
-                                            flex items-center justify-center text-xs font-bold text-white
-                                            ring-2 ring-surface-700 hover:ring-primary-500/50 transition-all duration-300">
-                                    @(User.Identity.Name?.Length > 0 ? User.Identity.Name[0].ToString().ToUpper() : "R")
-                                </div>
+                                @if (currentUser != null && !string.IsNullOrEmpty(currentUser.AvatarUrl))
+                                {
+                                    <img src="@currentUser.AvatarUrl" class="w-8 h-8 rounded-full object-cover ring-2 ring-surface-700 hover:ring-primary-500/50 transition-all duration-300" alt="" />
+                                }
+                                else
+                                {
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-accent-500
+                                                flex items-center justify-center text-xs font-bold text-white
+                                                ring-2 ring-surface-700 hover:ring-primary-500/50 transition-all duration-300">
+                                        @((currentUser?.DisplayName ?? User.Identity?.Name ?? "R").Substring(0, 1).ToUpper())
+                                    </div>
+                                }
                                 <svg class="w-4 h-4 text-surface-400 transition-transform duration-300"
                                      x-bind:class="profileOpen ? 'rotate-180' : ''"
                                      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -173,9 +199,21 @@
                                  id="nav-profile-dropdown">
 
                                 @* ── User Info ── *@
-                                <div class="px-3 py-3 mb-1">
-                                    <p class="text-sm font-semibold text-white truncate">@User.Identity.Name</p>
-                                    <p class="text-xs text-surface-500">Car Enthusiast 🏎️</p>
+                                <div class="px-3 py-3 mb-1 flex items-center gap-3">
+                                    @if (currentUser != null && !string.IsNullOrEmpty(currentUser.AvatarUrl))
+                                    {
+                                        <img src="@currentUser.AvatarUrl" class="w-10 h-10 rounded-full object-cover border border-surface-750 flex-shrink-0" alt="" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+                                            @((currentUser?.DisplayName ?? User.Identity?.Name ?? "R").Substring(0, 1).ToUpper())
+                                        </div>
+                                    }
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-white truncate">@(currentUser?.DisplayName ?? User.Identity?.Name)</p>
+                                        <p class="text-xs text-surface-500">Car Enthusiast</p>
+                                    </div>
                                 </div>
                                 <div class="h-px bg-surface-700/50 mx-2 mb-1"></div>
 
@@ -188,13 +226,21 @@
                                     </svg>
                                     Dashboard
                                 </a>
-                                <a asp-controller="Dashboard" asp-action="MyListings"
+                                <a asp-controller="Dashboard" asp-action="SavedCars"
                                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-surface-300
                                           hover:text-white hover:bg-white/5 transition-all duration-300">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                                     </svg>
-                                    My Listings
+                                    Saved Cars
+                                </a>
+                                <a asp-controller="Dashboard" asp-action="Messages"
+                                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-surface-300
+                                          hover:text-white hover:bg-white/5 transition-all duration-300">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                                    </svg>
+                                    My Inquiries
                                 </a>
                                 <a asp-controller="Account" asp-action="Profile"
                                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-surface-300
@@ -271,28 +317,28 @@
                 <div class="space-y-1">
                     <a href="/" class="block px-4 py-3 rounded-xl text-white font-medium bg-white/5
                                       transition-all duration-300 hover:bg-white/10 hover:pl-6">
-                        🏠 Home
+                        Home
                     </a>
                     <a href="/Cars/Browse" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
                                       transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
-                        🚗 Browse Cars
+                        Browse Cars
                     </a>
                     <a x-bind:href="compareLink" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
                                       transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6 flex items-center justify-between">
-                        <span>⚖️ Compare Vehicles</span>
+                        <span>Compare Vehicles</span>
                         <span x-show="compareCount > 0" x-text="compareCount" class="px-2 py-0.5 rounded-full bg-accent-500 text-white text-[10px] font-bold"></span>
                     </a>
-                    <a href="/Dashboard/MyListings" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
+                    <a href="#how-it-works" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
                                       transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
-                        💰 Sell Your Car
+                        How It Works
                     </a>
                     <a href="#" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
                                       transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
-                        ✨ How It Works
+                        How It Works
                     </a>
                     <a href="#" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
                                       transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
-                        ℹ️ About
+                        About
                     </a>
                 </div>
                 <div class="divider my-4"></div>
@@ -342,8 +388,8 @@
                         </span>
                     </a>
                     <p class="text-surface-400 text-sm leading-relaxed mb-6">
-                        The most exciting way to buy and sell cars.
-                        Premium experience, zero hassle, pure automotive joy.
+                        Premium automotive platform for curated car browsing and discovery.
+                        Seamless browsing, comparison, and dealer inquiries.
                     </p>
                     <div class="flex gap-3">
                         <!-- Social icons -->
@@ -377,14 +423,14 @@
                     </ul>
                 </div>
 
-                @* ── Sell ── *@
+                @* ── Buyer Tools ── *@
                 <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-6">Sell</h4>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-6">Buyer Tools</h4>
                     <ul class="space-y-3">
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">List Your Car</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Get Instant Offer</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Pricing Guide</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Seller Resources</a></li>
+                        <li><a href="/Cars/Browse" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Car Finder</a></li>
+                        <li><a x-bind:href="compareLink" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Compare Tool</a></li>
+                        <li><a href="/Dashboard/SavedCars" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Saved Wishlist</a></li>
+                        <li><a href="/Dashboard/Messages" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Inquiry Desk</a></li>
                     </ul>
                 </div>
 

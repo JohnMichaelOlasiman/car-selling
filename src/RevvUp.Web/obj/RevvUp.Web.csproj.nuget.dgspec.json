@@ -1,33 +1,39 @@
 {
   "format": 1,
   "restore": {
-    "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Web/RevvUp.Web.csproj": {}
+    "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Web\\RevvUp.Web.csproj": {}
   },
   "projects": {
-    "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj": {
+    "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj",
+        "projectUniqueName": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj",
         "projectName": "RevvUp.Application",
-        "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj",
-        "packagesPath": "/Users/rocelcodilla/.nuget/packages/",
-        "outputPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/obj/",
+        "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj",
+        "packagesPath": "C:\\Users\\Jan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/rocelcodilla/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Jan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj": {
-                "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj"
+              "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj": {
+                "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj"
               }
             }
           }
@@ -42,7 +48,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net10.0": {
@@ -63,7 +69,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -341,22 +347,28 @@
         }
       }
     },
-    "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj": {
+    "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj",
+        "projectUniqueName": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj",
         "projectName": "RevvUp.Core",
-        "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj",
-        "packagesPath": "/Users/rocelcodilla/.nuget/packages/",
-        "outputPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/obj/",
+        "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj",
+        "packagesPath": "C:\\Users\\Jan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/rocelcodilla/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Jan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -375,7 +387,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net10.0": {
@@ -402,7 +414,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -680,33 +692,39 @@
         }
       }
     },
-    "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj": {
+    "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Infrastructure\\RevvUp.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Infrastructure\\RevvUp.Infrastructure.csproj",
         "projectName": "RevvUp.Infrastructure",
-        "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj",
-        "packagesPath": "/Users/rocelcodilla/.nuget/packages/",
-        "outputPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/obj/",
+        "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Infrastructure\\RevvUp.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\Jan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/rocelcodilla/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Jan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj": {
-                "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj"
+              "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj": {
+                "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj"
               },
-              "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj": {
-                "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Core/RevvUp.Core.csproj"
+              "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj": {
+                "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Core\\RevvUp.Core.csproj"
               }
             }
           }
@@ -721,7 +739,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net10.0": {
@@ -759,7 +777,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
@@ -1177,33 +1195,39 @@
         }
       }
     },
-    "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Web/RevvUp.Web.csproj": {
+    "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Web\\RevvUp.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Web/RevvUp.Web.csproj",
+        "projectUniqueName": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Web\\RevvUp.Web.csproj",
         "projectName": "RevvUp.Web",
-        "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Web/RevvUp.Web.csproj",
-        "packagesPath": "/Users/rocelcodilla/.nuget/packages/",
-        "outputPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Web/obj/",
+        "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Web\\RevvUp.Web.csproj",
+        "packagesPath": "C:\\Users\\Jan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Web\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/rocelcodilla/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\Jan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj": {
-                "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Application/RevvUp.Application.csproj"
+              "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj": {
+                "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Application\\RevvUp.Application.csproj"
               },
-              "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj": {
-                "projectPath": "/Users/rocelcodilla/Downloads/car-selling/src/RevvUp.Infrastructure/RevvUp.Infrastructure.csproj"
+              "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Infrastructure\\RevvUp.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\Jan\\Downloads\\car-selling\\src\\RevvUp.Infrastructure\\RevvUp.Infrastructure.csproj"
               }
             }
           }
@@ -1218,7 +1242,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net10.0": {
@@ -1242,7 +1266,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.103/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

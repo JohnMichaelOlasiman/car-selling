@@ -1,0 +1,271 @@
+@* ============================================================
+   RevvUp — Dashboard Messenger Console
+   Dynamic, real-time two-pane conversation board
+   ============================================================ *@
+@model List<RevvUp.Web.Controllers.ChatThreadViewModel>
+@{
+    ViewData["Title"] = "Messenger";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="h-[calc(100vh-12rem)] flex gap-6 animate-fade-in-up" 
+     x-data="{
+         threads: @Json.Serialize(Model),
+         selectedThread: null,
+         messages: [],
+         newMessageText: '',
+         loading: false,
+         pollInterval: null,
+
+         async selectThread(thread) {
+             this.selectedThread = thread;
+             this.messages = [];
+             this.loading = true;
+             this.newMessageText = '';
+             
+             await this.fetchMessages();
+             this.loading = false;
+             this.scrollToBottom();
+
+             // Setup real-time polling
+             if (this.pollInterval) clearInterval(this.pollInterval);
+             this.pollInterval = setInterval(() => {
+                 this.fetchMessages(true);
+             }, 3000);
+         },
+
+         async fetchMessages(isSilent = false) {
+             if (!this.selectedThread) return;
+             try {
+                 let res = await fetch(`/Dashboard/GetChatHistory?inquiryId=${this.selectedThread.inquiryId}`);
+                 if (res.ok) {
+                     let data = await res.json();
+                     
+                     // If silent poll, only update if count changed or last message text/id is different
+                     if (isSilent) {
+                         if (data.length !== this.messages.length || (data.length > 0 && data[data.length-1].id !== this.messages[this.messages.length-1].id)) {
+                             this.messages = data;
+                             this.scrollToBottom();
+                         }
+                     } else {
+                         this.messages = data;
+                         this.scrollToBottom();
+                     }
+                 }
+             } catch (err) {
+                 console.error('Error fetching chat history:', err);
+             }
+         },
+
+         async sendMessage() {
+             if (!this.newMessageText.trim() || !this.selectedThread) return;
+             
+             let text = this.newMessageText;
+             this.newMessageText = ''; // Clear early for instant feel
+
+             try {
+                 let res = await fetch('/Dashboard/SendChatMessage', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                         'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]')?.value || ''
+                     },
+                     body: JSON.stringify({
+                         inquiryId: this.selectedThread.inquiryId,
+                         messageText: text
+                     })
+                 });
+
+                 if (res.ok) {
+                     let newMsg = await res.json();
+                     this.messages.push(newMsg);
+                     this.scrollToBottom();
+
+                     // Update the snippet in the sidebar thread list instantly
+                     let t = this.threads.find(x => x.inquiryId === this.selectedThread.inquiryId);
+                     if (t) {
+                         t.lastMessageSnippet = text.length > 40 ? text.substring(0, 37) + '...' : text;
+                         t.lastMessageTime = new Date().toISOString();
+                     }
+                 } else {
+                     alert('Failed to send message.');
+                 }
+             } catch (err) {
+                 console.error('Error sending message:', err);
+                 alert('Error sending message.');
+             }
+         },
+
+         scrollToBottom() {
+             this.$nextTick(() => {
+                 let chatContainer = this.$refs.chatContainer;
+                 if (chatContainer) {
+                     chatContainer.scrollTop = chatContainer.scrollHeight;
+                 }
+             });
+         },
+
+         formatTime(isoString) {
+             if (!isoString) return '';
+             let d = new Date(isoString);
+             return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+         }
+     }"
+     x-init="
+         // Auto-select first thread if exists
+         if (threads && threads.length > 0) {
+             selectThread(threads[0]);
+         }
+     "
+     x-on:destroy="if (pollInterval) clearInterval(pollInterval)">
+
+    @Html.AntiForgeryToken()
+
+    @* ── Left Pane: Active Threads ── *@
+    <div class="w-full md:w-80 flex-shrink-0 flex flex-col bg-surface-900 border border-surface-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-surface-800 bg-surface-950/50">
+            <h2 class="text-lg font-display font-bold text-white">Conversations</h2>
+            <p class="text-xs text-surface-400 mt-1">Connect with dealership representatives regarding your inquiries.</p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 space-y-2">
+            <template x-if="threads.length === 0">
+                <div class="text-center py-12 px-4">
+                    <svg class="w-12 h-12 text-surface-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                    </svg>
+                    <p class="text-sm font-medium text-surface-400">No active threads</p>
+                    <p class="text-xs text-surface-500 mt-1">Your vehicle inquiries will list here.</p>
+                </div>
+            </template>
+
+            <template x-for="thread in threads" :key="thread.inquiryId">
+                <button type="button"
+                        class="w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-start gap-3 relative group"
+                        x-on:click="selectThread(thread)"
+                        x-bind:class="selectedThread && selectedThread.inquiryId === thread.inquiryId 
+                                      ? 'bg-primary-600/10 border-primary-500/30' 
+                                      : 'bg-surface-950/20 border-transparent hover:bg-white/5 hover:border-surface-800'">
+                    
+                    @* Vehicle image *@
+                    <img :src="thread.carImageUrl" 
+                         class="w-12 h-12 rounded-lg object-cover bg-surface-800 flex-shrink-0 border border-surface-700/50" 
+                         alt="" />
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-1 mb-1">
+                            <span class="text-xs font-bold text-white truncate" x-text="thread.otherPartyName"></span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                  x-text="thread.otherPartyRole"
+                                  x-bind:class="thread.isSeller ? 'bg-accent-500/10 text-accent-400' : 'bg-primary-500/10 text-primary-400'">
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-surface-300 font-medium truncate" x-text="thread.carName"></p>
+                        <p class="text-[11px] text-surface-400 truncate mt-0.5" x-text="thread.lastMessageSnippet"></p>
+                    </div>
+                </button>
+            </template>
+        </div>
+    </div>
+
+    @* ── Right Pane: Active Chat Room ── *@
+    <div class="flex-1 flex flex-col bg-surface-900 border border-surface-800 rounded-2xl overflow-hidden relative">
+        <template x-if="!selectedThread">
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-surface-950/10">
+                <div class="w-16 h-16 bg-surface-900 border border-surface-800 rounded-2xl flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-display font-bold text-white mb-2">Your Inbox</h3>
+                <p class="text-sm text-surface-400 max-w-sm">Select an active conversation from the sidebar list to read messages and reply instantly in real-time.</p>
+            </div>
+        </template>
+
+        <template x-if="selectedThread">
+            <div class="flex-1 flex flex-col overflow-hidden">
+                @* Chat Header *@
+                <div class="p-4 border-b border-surface-800 bg-surface-950/50 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img :src="selectedThread.carImageUrl" 
+                             class="w-10 h-10 rounded-lg object-cover bg-surface-800 border border-surface-700/50 flex-shrink-0" 
+                             alt="" />
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span x-text="selectedThread.otherPartyName"></span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                      x-text="selectedThread.otherPartyRole"
+                                      x-bind:class="selectedThread.isSeller ? 'bg-accent-500/10 text-accent-400' : 'bg-primary-500/10 text-primary-400'">
+                                </span>
+                            </h3>
+                            <p class="text-xs text-surface-400 truncate mt-0.5" x-text="selectedThread.carName"></p>
+                        </div>
+                    </div>
+
+                    <a :href="'/Cars/Details/' + selectedThread.carId"
+                       class="btn-secondary py-1.5 px-3.5 text-xs flex items-center gap-1.5 flex-shrink-0">
+                        View Vehicle
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </a>
+                </div>
+
+                @* Chat Body Messages Container *@
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-surface-950/10" 
+                     x-ref="chatContainer">
+                    
+                    <template x-if="loading">
+                        <div class="flex flex-col items-center justify-center h-full space-y-3">
+                            <div class="w-8 h-8 rounded-full border-2 border-primary-500 border-t-transparent animate-spin"></div>
+                            <span class="text-xs text-surface-500 font-mono">Loading conversation...</span>
+                        </div>
+                    </template>
+
+                    <template x-if="!loading">
+                        <div class="space-y-4">
+                            <template x-for="msg in messages" :key="msg.id">
+                                <div class="flex" :class="msg.isCurrentUser ? 'justify-end' : 'justify-start'">
+                                    <div class="max-w-[75%]">
+                                        @* Bubble *@
+                                        <div class="p-3.5 text-sm rounded-2xl shadow-sm whitespace-pre-wrap"
+                                             :class="msg.isCurrentUser 
+                                                     ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-tr-none' 
+                                                     : 'bg-surface-800 text-white rounded-tl-none border border-surface-700/50'">
+                                            <p x-text="msg.messageText"></p>
+                                        </div>
+                                        
+                                        @* Metadata *@
+                                        <div class="mt-1 flex items-center gap-2 text-[10px] text-surface-500 px-1"
+                                             :class="msg.isCurrentUser ? 'justify-end' : 'justify-start'">
+                                            <span class="font-bold" x-text="msg.isCurrentUser ? 'You' : msg.senderName"></span>
+                                            <span>•</span>
+                                            <span x-text="formatTime(msg.createdAt)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                @* Chat Input Footer *@
+                <form class="p-4 border-t border-surface-800 bg-surface-950/50 flex items-center gap-3" 
+                      x-on:submit.prevent="sendMessage">
+                    <input type="text"
+                           x-model="newMessageText"
+                           placeholder="Type a professional message..."
+                           class="flex-1 bg-surface-900 border border-surface-800 rounded-xl px-4 py-3 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/50 transition-all duration-300" />
+                    
+                    <button type="submit"
+                            class="bg-primary-600 hover:bg-primary-500 text-white p-3 rounded-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:hover:bg-primary-600"
+                            :disabled="!newMessageText.trim()">
+                        <svg class="w-5 h-5 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0-7 7m7-7 7 7" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </template>
+    </div>
+</div>

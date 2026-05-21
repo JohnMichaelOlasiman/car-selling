@@ -3,6 +3,7 @@
 // Login, Register, and Profile form models
 // ============================================================
 
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace RevvUp.Web.Models;
@@ -38,7 +39,7 @@ public class RegisterViewModel
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
-    [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters")]
+    [StringLength(100, MinimumLength = 1, ErrorMessage = "Password must be at least 1 character")]
     [DataType(DataType.Password)]
     [Display(Name = "Password")]
     public string Password { get; set; } = string.Empty;
@@ -48,9 +49,6 @@ public class RegisterViewModel
     [Compare("Password", ErrorMessage = "Passwords don't match")]
     [Display(Name = "Confirm Password")]
     public string ConfirmPassword { get; set; } = string.Empty;
-
-    [Display(Name = "I'm a dealer")]
-    public bool IsDealer { get; set; }
 }
 
 /// <summary>Profile edit form model</summary>
@@ -79,7 +77,4 @@ public class ProfileViewModel
 
     public string? AvatarUrl { get; set; }
     public DateTime JoinedAt { get; set; }
-    public int TotalListings { get; set; }
-    public int TotalSales { get; set; }
-    public bool IsDealer { get; set; }
 }

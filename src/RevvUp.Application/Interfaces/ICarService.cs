@@ -3,13 +3,15 @@
 // Clean Architecture: Application layer service contracts
 // ============================================================
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using RevvUp.Core.Entities;
 
 namespace RevvUp.Application.Interfaces;
 
 /// <summary>
-/// Application service contract for car-related operations.
-/// Orchestrates business logic using Core entities and repository interfaces.
+/// Application service contract for car, inquiry, chat, and favorite operations.
 /// </summary>
 public interface ICarService
 {
@@ -20,4 +22,19 @@ public interface ICarService
     Task AddCarAsync(Car car);
     Task UpdateCarAsync(Car car);
     Task DeleteCarAsync(Guid id);
+
+    // ── Inquiry Operations ──
+    Task AddInquiryAsync(Inquiry inquiry);
+    Task<IEnumerable<Inquiry>> GetInquiriesByUserIdAsync(string userId);
+    Task<Inquiry?> GetInquiryByIdAsync(Guid id);
+
+    // ── Chat Message Operations ──
+    Task AddChatMessageAsync(ChatMessage message);
+    Task<IEnumerable<ChatMessage>> GetChatMessagesByInquiryIdAsync(Guid inquiryId);
+
+    // ── Favorite Operations ──
+    Task AddFavoriteAsync(Favorite favorite);
+    Task RemoveFavoriteAsync(string userId, Guid carId);
+    Task<IEnumerable<Favorite>> GetFavoritesByUserIdAsync(string userId);
+    Task<bool> IsFavoriteAsync(string userId, Guid carId);
 }

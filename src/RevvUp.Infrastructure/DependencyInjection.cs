@@ -32,11 +32,12 @@ public static class DependencyInjection
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
             // Password: relaxed for dev, tighten for production
-            options.Password.RequireDigit = true;
-            options.Password.RequireLowercase = true;
-            options.Password.RequireUppercase = true;
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireUppercase = false;
             options.Password.RequireNonAlphanumeric = false;
-            options.Password.RequiredLength = 8;
+            options.Password.RequiredLength = 1;
+            options.Password.RequiredUniqueChars = 1;
 
             // User settings
             options.User.RequireUniqueEmail = true;
@@ -49,7 +50,7 @@ public static class DependencyInjection
         .AddDefaultTokenProviders();
 
         // ── Repositories ──
-        services.AddSingleton<ICarRepository, InMemoryCarRepository>();
+        services.AddScoped<ICarRepository, EfCarRepository>();
 
         // ── Application Services ──
         services.AddScoped<ICarService, CarService>();

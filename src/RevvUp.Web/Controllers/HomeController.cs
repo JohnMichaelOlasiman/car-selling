@@ -28,20 +28,42 @@ public class HomeController : Controller
 
         ViewBag.FeaturedCars = featured.Take(4).Select(c => new CarCardViewModel
         {
-            Id = c.Id, Make = c.Make, Model = c.Model, Year = c.Year,
-            Price = c.Price, ImageUrl = c.ImageUrl, Mileage = c.Mileage,
-            FuelType = c.FuelType, Transmission = c.Transmission, BodyType = c.BodyType,
-            Color = c.Color, Location = c.Location, IsFeatured = c.IsFeatured,
-            Description = c.Description, CreatedAt = c.CreatedAt
+            Id = c.Id,
+            Brand = c.Brand,
+            Model = c.Model,
+            Year = c.Year,
+            Price = c.Price,
+            ImageUrls = c.ImageUrls,
+            Mileage = c.Mileage,
+            FuelType = c.FuelType,
+            Transmission = c.Transmission,
+            BodyType = c.BodyType,
+            Color = c.Color,
+            IsFeatured = c.IsFeatured,
+            Description = c.Description,
+            DateAdded = c.DateAdded,
+            Condition = c.Condition,
+            Status = c.Status
         }).ToList();
 
-        ViewBag.RecentCars = all.Take(6).Select(c => new CarCardViewModel
+        ViewBag.RecentCars = all.OrderByDescending(c => c.DateAdded).Take(6).Select(c => new CarCardViewModel
         {
-            Id = c.Id, Make = c.Make, Model = c.Model, Year = c.Year,
-            Price = c.Price, ImageUrl = c.ImageUrl, Mileage = c.Mileage,
-            FuelType = c.FuelType, Transmission = c.Transmission, BodyType = c.BodyType,
-            Color = c.Color, Location = c.Location, IsFeatured = c.IsFeatured,
-            Description = c.Description, CreatedAt = c.CreatedAt
+            Id = c.Id,
+            Brand = c.Brand,
+            Model = c.Model,
+            Year = c.Year,
+            Price = c.Price,
+            ImageUrls = c.ImageUrls,
+            Mileage = c.Mileage,
+            FuelType = c.FuelType,
+            Transmission = c.Transmission,
+            BodyType = c.BodyType,
+            Color = c.Color,
+            IsFeatured = c.IsFeatured,
+            Description = c.Description,
+            DateAdded = c.DateAdded,
+            Condition = c.Condition,
+            Status = c.Status
         }).ToList();
 
         return View();

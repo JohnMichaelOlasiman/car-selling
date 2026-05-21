@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RevvUp.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f472af2204b59f81f1359b32f8fc4cab12699303")]
 [assembly: System.Reflection.AssemblyProductAttribute("RevvUp.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RevvUp.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
