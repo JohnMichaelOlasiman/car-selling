@@ -186,5 +186,5 @@ To customize the SQLite database storage path, you can optionally define it in `
 
 ---
 
-## License
-This repository is engineered for educational, demonstration, and professional portfolio purposes. All seeded vehicles and user credentials are safe development assets.
+## Project Disclaimer & Purpose
+This repository was developed strictly as a school project for academic and educational purposes. All seeded vehicle listings, user accounts, and credentials are mock data used solely for development and demonstration.
