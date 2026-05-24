@@ -1,27 +1,27 @@
-# RevvUp 🚗
+# RevvUp
 > A premium car marketplace web application engineered with ASP.NET Core 10 MVC.
 
 ---
 
-## 📌 About The Project
-**RevvUp** is an elite, high-performance digital showroom and car marketplace designed for automotive purists. The platform enables seamless buying, selling, and managing of curated vehicle collections. 
+## About The Project
+RevvUp is an elite, high-performance digital showroom and car marketplace designed for automotive purists. The platform enables seamless buying, selling, and managing of curated vehicle collections. 
 
 By unifying buyers and sellers into a single, high-fidelity experience, RevvUp bridges the gap between private listings, dealerships, and active automotive enthusiasts.
 
 ### Key Features
-*   **Intuitive Inventory Showroom:** Sleek, visual browse and search pages with dynamic filters.
+*   **Intuitive Showroom:** Sleek, visual browse and search pages with dynamic filters.
 *   **Unified Account Roles:** Unified Buyer and Seller roles in one combined account—any registered user can both browse wishlist items and list high-end vehicles.
-*   **Real-time Communications:** Bidirectional, real-time user messaging powered by **SignalR** connection networks.
+*   **Real-time Communications:** Bidirectional, real-time user messaging powered by SignalR connection networks.
 *   **Instant Notifications:** Real-time push alerts for listings, inquiries, favorites, and new messages.
 *   **Side-by-Side Spec Comparison:** A visual multi-vehicle spec evaluator to compare up to 4 models.
 *   **Interactive Financial Estimator:** Built-in dynamic EMI calculator to estimate monthly loans and interest.
 *   **Seller Command Center:** Dedicated seller listing dashboard complete with viewer statistics, inquiry thread managers, and soft-delete controls.
-*   **Status Management:** One-click functionality to mark listings as **Sold** or **Available**.
+*   **Status Management:** One-click functionality to mark listings as Sold or Available.
 *   **Premium Security:** Validate Anti-Forgery Token protection on all critical forms and AJAX endpoints with elegant modal confirmations.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
@@ -38,25 +38,25 @@ By unifying buyers and sellers into a single, high-fidelity experience, RevvUp b
 
 ---
 
-## ✅ Requirements
+## Requirements
 Before launching the application, ensure you have the following installed on your system:
 
-1.  **[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)**
+1.  **.NET 10 SDK** (https://dotnet.microsoft.com/download/dotnet/10.0)
     *   Required to compile and run the application.
-2.  **[Visual Studio 2022](https://visualstudio.microsoft.com/vs/) (v17.10 or later)**
+2.  **Visual Studio 2022** (https://visualstudio.microsoft.com/vs/) (v17.10 or later)
     *   Make sure to install the following workloads during setup:
         *   *ASP.NET and web development*
         *   *.NET desktop development*
-3.  **[Node.js](https://nodejs.org)**
+3.  **Node.js** (https://nodejs.org)
     *   Recommended for running the Tailwind CSS CLI compilers locally.
-4.  **[Git](https://git-scm.com)**
+4.  **Git** (https://git-scm.com)
     *   For version control and repository management.
 5.  **SQLite**
     *   No manual install needed! EF Core automatically handles creation, migrations, and seeding out-of-the-box.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 Follow these steps to run the application locally on your computer:
 
@@ -102,14 +102,14 @@ Once compiled, the application will be hosted locally at:
 
 ---
 
-## 🗄️ Database
+## Database
 *   **Auto-Creation:** The SQLite database file is automatically created on first-run inside the `/App_Data/revvup.db` directory.
 *   **Database Initializer:** The database initializer (`DbInitializer.cs`) runs automatically in development environments. It auto-migrates and seeds a complete starter kit containing **52 vehicle listings** pre-assigned to the default dealer account.
 *   **No Manual Setup:** Zero relational configuration, engine, or local database installs are required.
 
 ---
 
-## 👤 Sample Accounts
+## Sample Accounts
 
 ### Demo Seller Account (owns all 52 pre-seeded listings)
 | Field | Value |
@@ -126,7 +126,7 @@ Once compiled, the application will be hosted locally at:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 RevvUp/
@@ -141,7 +141,7 @@ RevvUp/
 ├── Hubs/                 → SignalR hubs facilitating real-time WebSockets connections
 ├── Services/             → Core services (Notification dispatchers)
 ├── Data/                 → Database Context, initialization seeds, and model constraints
-├── Migrations/           → Entity Framework Core schema blueprints
+├── Migrations/           → EF Core migration files
 ├── wwwroot/              → Distributed static assets
 │   ├── css/              → Tailored CSS assets
 │   ├── js/               → Reactivity scripts
@@ -152,7 +152,7 @@ RevvUp/
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 The database connection is defined in the `appsettings.json` file inside `src/RevvUp.Web`. No external API keys or credentials are required.
 
@@ -165,7 +165,7 @@ To customize the SQLite database storage path, edit the connection string:
 
 ---
 
-## 🔑 Key Pages
+## Key Pages
 
 | Page | URL | Description |
 | :--- | :--- | :--- |
@@ -181,10 +181,10 @@ To customize the SQLite database storage path, edit the connection string:
 
 ---
 
-## 🐛 Known Issues
+## Known Issues
 *   None currently. If you encounter any bugs, feel free to open a new GitHub Issue!
 
 ---
 
-## 📄 License
+## License
 This repository is engineered for educational, demonstration, and professional portfolio purposes. All seeded vehicles and user credentials are safe development assets.
