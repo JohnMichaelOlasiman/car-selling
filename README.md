@@ -63,7 +63,6 @@ Follow these steps to run the application locally on your computer:
 ### Step 1 — Clone the Repository
 ```bash
 git clone https://github.com/YOUR_USERNAME/RevvUp.git
-cd RevvUp
 ```
 
 ### Step 2 — Open in Visual Studio
