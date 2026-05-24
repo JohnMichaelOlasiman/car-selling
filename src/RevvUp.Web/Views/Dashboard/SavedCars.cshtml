@@ -1,72 +1,164 @@
 @{
     ViewData["Title"] = "Saved Cars";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewData["FitToScreen"] = true;
+    ViewData["UseCompactFooter"] = true;
 }
 
-<div class="animate-fade-in-up" x-data="savedCarsApp()">
-    <div class="mb-8">
-        <h1 class="text-3xl font-display font-bold text-white mb-2">Saved Cars</h1>
-        <p class="text-surface-400">Cars you've fallen in love with in the marketplace</p>
+<div class="py-2 animate-fade-in-up flex-grow flex flex-col lg:overflow-hidden lg:min-h-0" x-data="savedCarsApp()">
+
+    @* ── Header ── *@
+    <div class="mb-4 flex-shrink-0">
+        <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-1">My Garage</span>
+        <h1 class="text-3xl font-display font-black text-white mb-1">Saved Cars</h1>
+        <p class="text-surface-400 text-xs sm:text-sm">Vehicles you've marked as favorites in the showroom catalog.</p>
     </div>
 
-    @* Empty State *@
-    <div x-show="savedList.length === 0" class="card p-12 text-center max-w-lg mx-auto" x-cloak>
-        <div class="flex justify-center mb-4">
-            <svg class="w-12 h-12 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-            </svg>
-        </div>
-        <h3 class="text-lg font-display font-bold text-white mb-2">Your wishlist is currently empty</h3>
-        <p class="text-xs text-surface-500 mb-6">Explore our curated collections of supercars and muscle cars to save your favorites.</p>
-        <a href="/Cars/Browse" class="btn-primary">Browse Vehicles</a>
-    </div>
+    @* Scrollable wrapper for the main content *@
+    <div class="flex-grow lg:overflow-y-auto pr-2 custom-scrollbar mb-4">
+        @* ══════════════════════════════════════
+           POPULATED STATE — Favorites Grid + Pagination
+        ══════════════════════════════════════ *@
+        <div x-show="savedList.length > 0" x-cloak>
 
-    @* Wishlist Grid *@
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="savedList.length > 0">
-        <template x-for="car in savedList" :key="car.id">
-            <div class="card p-5 group hover:border-primary-500/20 transition-all duration-300 relative overflow-hidden"
-                 x-transition:leave="transition ease-in duration-300 transform scale-95 opacity-0">
-                <div class="flex items-start gap-4">
-                    <a :href="'/Cars/Details/' + car.id" class="w-20 h-20 rounded-xl overflow-hidden bg-surface-800 flex-shrink-0">
-                        <img :src="car.image" class="w-full h-full object-cover" />
-                    </a>
-                    <div class="flex-1 min-w-0">
-                        <a :href="'/Cars/Details/' + car.id"
-                           class="block text-base font-display font-bold text-white truncate hover:text-primary-400 transition-colors"
-                           x-text="car.name"></a>
-                        <p class="text-lg font-display font-bold text-gradient mb-1" x-text="car.price"></p>
-                        <p class="text-[11px] text-surface-500" x-text="car.mileage + ' • ' + car.transmission + ' • ' + car.fuelType + ' • ' + car.location"></p>
-                    </div>
-
-                    @* Remove Heart Button *@
-                    <button x-on:click="removeCar(car)"
-                            class="flex-shrink-0 p-2 rounded-xl text-pink-400 bg-pink-500/10 hover:bg-pink-500/20 transition-all duration-300">
-                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                            <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-                        </svg>
-                    </button>
-                </div>
+            @* Results info *@
+            <div class="flex items-center justify-between mb-5">
+                <p class="text-xs text-surface-400">
+                    Showing <span class="text-white font-bold" x-text="pageStart + 1"></span>–<span class="text-white font-bold" x-text="Math.min(pageStart + pageSize, savedList.length)"></span>
+                    of <span class="text-white font-bold" x-text="savedList.length"></span> saved vehicles
+                </p>
+                <span class="text-xs text-surface-500 font-medium">Page <span x-text="currentPage + 1"></span> of <span x-text="totalPages"></span></span>
             </div>
-        </template>
+
+            @* Car Grid *@
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                <template x-for="car in pagedSaved" :key="car.id">
+                    <div class="card-glass overflow-hidden border border-surface-800 hover:border-primary-500/30 hover:shadow-card-hover transition-all duration-350 flex flex-col h-full group">
+
+                        @* Vehicle Image *@
+                        <div class="relative h-44 overflow-hidden bg-surface-900 border-b border-surface-800/80">
+                            <img :src="car.image" onerror="this.onerror=null;this.src='https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="Vehicle" />
+                            <template x-if="car.isSold">
+                                <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center z-10">
+                                    <span class="bg-red-600 text-white text-lg font-black px-6 py-2 rounded-full uppercase tracking-widest rotate-[-15deg]">
+                                        SOLD
+                                    </span>
+                                </div>
+                            </template>
+                            <div class="absolute inset-0 bg-gradient-to-t from-surface-950/70 via-transparent to-transparent"></div>
+                            <button x-on:click="removeCar(car)"
+                                    class="absolute top-3 right-3 p-2 rounded-xl text-pink-400 bg-surface-950/80 hover:bg-pink-500 hover:text-white border border-surface-800/60 hover:border-pink-500 transition-all duration-300 shadow-glow-sm"
+                                    title="Remove from Wishlist">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        @* Card Details *@
+                        <div class="p-5 flex-grow flex flex-col justify-between bg-surface-900/40">
+                            <div>
+                                <a :href="'/Cars/Details/' + car.id"
+                                   class="block text-lg font-display font-extrabold text-white truncate hover:text-primary-400 transition-colors"
+                                   x-text="car.name"></a>
+                                <p class="text-xs text-surface-400 font-semibold mt-1.5 truncate" x-text="car.mileage + ' • ' + car.transmission + ' • ' + car.fuelType"></p>
+                            </div>
+                            <div class="mt-4 pt-3.5 border-t border-surface-800/80 flex items-center justify-between">
+                                <span class="text-xl font-display font-black text-gradient" x-text="car.price"></span>
+                                <a :href="'/Cars/Details/' + car.id" class="text-xs font-bold text-primary-400 hover:text-white transition-colors flex items-center gap-1">
+                                    Details
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            @* Pagination Controls *@
+            <div class="flex items-center justify-center gap-2 mt-2" x-show="totalPages > 1">
+                <button x-on:click="prevPage()"
+                        :disabled="currentPage === 0"
+                        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300
+                               disabled:opacity-30 disabled:cursor-not-allowed
+                               border-surface-700 text-surface-300 hover:text-white hover:bg-white/5 hover:border-surface-600">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+                    </svg>
+                    Prev
+                </button>
+
+                <template x-for="p in totalPages" :key="p">
+                    <button x-on:click="goToPage(p - 1)"
+                            :class="currentPage === p - 1
+                                ? 'w-9 h-9 rounded-xl text-xs font-bold bg-primary-500/20 border border-primary-500/40 text-white shadow-glow-sm'
+                                : 'w-9 h-9 rounded-xl text-xs font-bold border border-surface-700 text-surface-400 hover:text-white hover:bg-white/5'"
+                            x-text="p">
+                    </button>
+                </template>
+
+                <button x-on:click="nextPage()"
+                        :disabled="currentPage >= totalPages - 1"
+                        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300
+                               disabled:opacity-30 disabled:cursor-not-allowed
+                               border-surface-700 text-surface-300 hover:text-white hover:bg-white/5 hover:border-surface-600">
+                    Next
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        @* ══════════════════════════════════════
+           EMPTY STATE — Full-width, no card box
+        ══════════════════════════════════════ *@
+        <div x-show="savedList.length === 0" x-cloak>
+
+            @* Hero empty message *@
+            <div class="flex flex-col items-center text-center py-14 mb-12">
+                <div class="w-20 h-20 rounded-3xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 mb-6 shadow-glow-sm">
+                    <svg class="w-10 h-10 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-display font-black text-white mb-3">Your wishlist is empty</h2>
+                <p class="text-surface-400 text-sm max-w-md leading-relaxed mb-8">
+                    Explore our curated collections of supercars and luxury performance vehicles to save your favorites.
+                </p>
+                <a href="/Cars/Browse"
+                   class="btn-primary px-8 py-3 text-sm font-bold flex items-center gap-2">
+                    Browse Vehicles
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
     </div>
 
-    @* ── Undo Toast Notification ── *@
+    @* ── Undo Toast ── *@
     <div class="fixed bottom-6 right-6 z-50 pointer-events-none flex flex-col items-end gap-3">
         <div x-show="toastOpen" x-cloak
-             x-transition:enter="transition ease-out duration-300 transform translate-y-4 opacity-0"
-             x-transition:enter-end="transform translate-y-0 opacity-100"
-             x-transition:leave="transition ease-in duration-200 transform translate-y-4 opacity-0"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
              class="pointer-events-auto bg-surface-900 border border-surface-800 p-4 rounded-2xl shadow-elevated flex items-center gap-4 max-w-sm">
-            <div class="text-pink-400">
+            <div class="text-pink-400 flex-shrink-0">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
             </div>
-            <div class="flex-1">
-                <p class="text-xs font-semibold text-white">Removed from Wishlist</p>
-                <p class="text-[10px] text-surface-500" x-text="removedCarName"></p>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-white">Removed from Wishlist</p>
+                <p class="text-[10px] text-surface-500 truncate" x-text="removedCarName"></p>
             </div>
-            <button x-on:click="undo()" class="px-3 py-1.5 rounded-lg bg-primary-500/15 text-primary-400 text-xs font-bold hover:bg-primary-500/25 transition-all">
+            <button x-on:click="undo()" class="px-3.5 py-1.5 rounded-lg bg-primary-500/10 text-primary-400 text-xs font-bold hover:bg-primary-500 hover:text-white border border-primary-500/20 hover:border-primary-500 transition-all duration-300">
                 Undo
             </button>
         </div>
@@ -76,18 +168,37 @@
 @section Scripts {
 <script>
 function savedCarsApp() {
-    const rawCars = JSON.parse('@Html.Raw(ViewBag.AllCarsJson)');
+    const rawCars    = JSON.parse('@Html.Raw(ViewBag.AllCarsJson)');
+    const rawBrowse  = JSON.parse('@Html.Raw(ViewBag.BrowseCarsJson ?? "[]")');
 
     return {
-        allCars: rawCars,
-        savedList: [],
-        toastOpen: false,
+        // ── Favorites ──
+        allCars:       rawCars,
+        savedList:     [],
+        currentPage:   0,
+        pageSize:      8,
+
+        // ── Browse suggestions ──
+        browseCars:    rawBrowse,
+        browsePage:    0,
+
+        // ── Toast ──
+        toastOpen:      false,
         lastRemovedCar: null,
         removedCarName: '',
-        toastTimeout: null,
+        toastTimeout:   null,
+
+        // ── Computed: Favorites pagination ──
+        get pageStart()  { return this.currentPage * this.pageSize; },
+        get totalPages() { return Math.max(1, Math.ceil(this.savedList.length / this.pageSize)); },
+        get pagedSaved() { return this.savedList.slice(this.pageStart, this.pageStart + this.pageSize); },
+
+        // ── Computed: Browse pagination ──
+        get browsePageStart()  { return this.browsePage * this.pageSize; },
+        get browseTotalPages() { return Math.max(1, Math.ceil(this.browseCars.length / this.pageSize)); },
+        get pagedBrowse()      { return this.browseCars.slice(this.browsePageStart, this.browsePageStart + this.pageSize); },
 
         init() {
-            // Sync local storage with database favorites
             const dbIds = this.allCars.map(c => c.id);
             localStorage.setItem('likedCars', JSON.stringify(dbIds));
             window.dispatchEvent(new Event('storage'));
@@ -95,36 +206,44 @@ function savedCarsApp() {
         },
 
         loadSaved() {
-            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+            const likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
             this.savedList = this.allCars.filter(c => likedIds.includes(c.id));
+            // Reset to page 1 if current page is now out of range
+            if (this.currentPage >= this.totalPages) this.currentPage = 0;
         },
 
-        async removeCar(car) {
-            this.lastRemovedCar = car;
-            this.removedCarName = car.name;
+        // ── Favorites pagination ──
+        prevPage()        { if (this.currentPage > 0) this.currentPage--; },
+        nextPage()        { if (this.currentPage < this.totalPages - 1) this.currentPage++; },
+        goToPage(p)       { this.currentPage = p; },
 
-            // Remove from array and local storage
+        // ── Browse pagination ──
+        prevBrowsePage()  { if (this.browsePage > 0) this.browsePage--; },
+        nextBrowsePage()  { if (this.browsePage < this.browseTotalPages - 1) this.browsePage++; },
+        goToBrowsePage(p) { this.browsePage = p; },
+
+        async removeCar(car) {
+            this.lastRemovedCar  = car;
+            this.removedCarName  = car.name;
+
             let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
             likedIds = likedIds.filter(id => id !== car.id);
             localStorage.setItem('likedCars', JSON.stringify(likedIds));
 
-            // Sync with SQLite backend
-            try {
-                await fetch(`/Cars/ToggleFavorite/${car.id}`, { method: 'POST' });
-            } catch (err) {
-                console.error("Failed to sync favorite with backend", err);
-            }
+            try { 
+                const token = document.querySelector("input[name='__RequestVerificationToken']")?.value;
+                await fetch(`/Cars/ToggleFavorite/${car.id}`, { 
+                    method: 'POST', 
+                    headers: { 'RequestVerificationToken': token || '' }
+                }); 
+            } catch {}
 
             window.dispatchEvent(new Event('storage'));
             this.loadSaved();
 
-            // Open Toast
             this.toastOpen = true;
             if (this.toastTimeout) clearTimeout(this.toastTimeout);
-
-            this.toastTimeout = setTimeout(() => {
-                this.toastOpen = false;
-            }, 6000);
+            this.toastTimeout = setTimeout(() => { this.toastOpen = false; }, 6000);
         },
 
         async undo() {
@@ -136,16 +255,17 @@ function savedCarsApp() {
                 localStorage.setItem('likedCars', JSON.stringify(likedIds));
             }
 
-            // Sync back to backend
-            try {
-                await fetch(`/Cars/ToggleFavorite/${this.lastRemovedCar.id}`, { method: 'POST' });
-            } catch (err) {
-                console.error("Failed to sync favorite undo with backend", err);
-            }
+            try { 
+                const token = document.querySelector("input[name='__RequestVerificationToken']")?.value;
+                await fetch(`/Cars/ToggleFavorite/${this.lastRemovedCar.id}`, { 
+                    method: 'POST', 
+                    headers: { 'RequestVerificationToken': token || '' }
+                }); 
+            } catch {}
 
             window.dispatchEvent(new Event('storage'));
             this.loadSaved();
-            this.toastOpen = false;
+            this.toastOpen     = false;
             this.lastRemovedCar = null;
         }
     };

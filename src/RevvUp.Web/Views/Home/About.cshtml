@@ -1,0 +1,517 @@
+@{
+    ViewData["Title"] = "About RevvUp";
+    ViewData["HideFooter"] = true;
+}
+
+@* ── Vertical Dot Navigator ── *@
+<div x-data="{
+         activeSection: 'about-hero',
+         sections: [
+             { id: 'about-hero', label: 'About RevvUp' },
+             { id: 'mission-vision', label: 'Mission & Vision' },
+             { id: 'how-it-works', label: 'How It Works' },
+             { id: 'why-revvup', label: 'Why RevvUp' },
+             { id: 'meet-the-team', label: 'Meet the Team' },
+             { id: 'about-footer', label: 'Connect' }
+         ],
+         init() {
+             const observer = new IntersectionObserver((entries) => {
+                 entries.forEach(entry => {
+                     if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+                         this.activeSection = entry.target.id;
+                     }
+                 });
+             }, { threshold: [0.1, 0.4, 0.7], rootMargin: '-10% 0px -10% 0px' });
+             
+             this.sections.forEach(s => {
+                 const el = document.getElementById(s.id);
+                 if (el) observer.observe(el);
+             });
+         },
+         scrollTo(id) {
+             const el = document.getElementById(id);
+             if (el) {
+                 el.scrollIntoView({ behavior: 'smooth' });
+             }
+         }
+     }"
+     class="fixed right-8 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-5 p-3.5 rounded-full bg-surface-950/40 backdrop-blur-md border border-surface-800/40 shadow-elevated"
+     x-cloak>
+    
+    <template x-for="section in sections" :key="section.id">
+        <button x-on:click="scrollTo(section.id)"
+                class="group relative flex items-center justify-end w-4 h-4 rounded-full transition-all duration-300"
+                aria-label="Navigate to section">
+            
+            @* Tooltip hover text *@
+            <span class="absolute right-8 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-surface-900 border border-surface-800/60 shadow-elevated opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap">
+                <span x-text="section.label"></span>
+            </span>
+
+            @* Dot circle *@
+            <span class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                  x-bind:class="activeSection === section.id 
+                      ? 'bg-primary-500 scale-125 shadow-glow-sm' 
+                      : 'bg-surface-600 group-hover:bg-primary-400/80 group-hover:scale-110'"></span>
+        </button>
+    </template>
+</div>
+
+@* ── HERO SECTION ── *@
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden py-16 md:py-24 xl:py-32 snap-section" id="about-hero">
+    @* Background Gradient Orbs *@
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary-500/8 rounded-full blur-[150px] animate-float"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent-500/6 rounded-full blur-[120px]" style="animation: float 8s ease-in-out infinite 2s;"></div>
+    </div>
+
+    <div class="relative z-10 premium-container text-center pt-8 md:pt-12">
+        <div class="animate-fade-in-down mb-6 lg:mb-8">
+            <span class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-primary-500/10 border border-primary-500/25 text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.18em]">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                </span>
+                Our Story
+            </span>
+        </div>
+
+        <div class="animate-fade-in-up">
+            <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-[6rem] xl:text-[7.5rem] font-display font-black leading-[0.98] tracking-tight mb-6 lg:mb-8">
+                <span class="block text-white">About</span>
+                <span class="block text-gradient mt-2">RevvUp</span>
+            </h1>
+        </div>
+
+        <p class="animate-fade-in-up delay-100 opacity-0 text-lg sm:text-xl md:text-2xl text-surface-200 max-w-4xl mx-auto mb-8 lg:mb-12 leading-relaxed font-medium">
+            We're a passionate team of car enthusiasts and tech innovators building the Philippines' most exciting automotive marketplace.
+        </p>
+
+        @* Trust Metrics *@
+        <div class="animate-fade-in-up delay-300 opacity-0">
+            <div class="flex flex-wrap items-center justify-center gap-10 sm:gap-20">
+                <div class="text-center">
+                    <div class="text-5xl sm:text-6xl lg:text-7xl font-display font-black text-white">50+</div>
+                    <div class="text-base sm:text-lg text-surface-400 uppercase tracking-[0.2em] mt-3 font-extrabold">Cars Available</div>
+                </div>
+                <div class="w-[1.5px] h-16 bg-surface-800 hidden sm:block"></div>
+                <div class="text-center">
+                    <div class="text-5xl sm:text-6xl lg:text-7xl font-display font-black text-white">15+</div>
+                    <div class="text-base sm:text-lg text-surface-400 uppercase tracking-[0.2em] mt-3 font-extrabold">Curated Brands</div>
+                </div>
+                <div class="w-[1.5px] h-16 bg-surface-800 hidden sm:block"></div>
+                <div class="text-center">
+                    <div class="text-5xl sm:text-6xl lg:text-7xl font-display font-black text-white">1,000+</div>
+                    <div class="text-base sm:text-lg text-surface-400 uppercase tracking-[0.2em] mt-3 font-extrabold">Happy Buyers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── MISSION & VISION SECTION ── *@
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 border-t border-surface-850 bg-surface-950 snap-section" id="mission-vision">
+    <div class="premium-container">
+        <div class="text-center mb-10 lg:mb-16">
+            <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-3">Who We Are</span>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-display font-black text-white leading-tight mb-6">
+                Our <span class="text-gradient">Purpose</span>
+            </h2>
+            <p class="text-surface-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
+                Driven by passion. Powered by innovation. Built for the Filipino car community.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            @* Mission Card *@
+            <div class="card-glass p-8 md:p-10 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-500">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-[60px] group-hover:bg-primary-500/10 transition-colors duration-500"></div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-7 h-7 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.841m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl sm:text-3xl font-display font-bold text-white mb-4">Our Mission</h3>
+                    <p class="text-surface-400 text-base sm:text-lg leading-relaxed">
+                        To revolutionize the way Filipinos buy and sell vehicles by providing a premium, transparent, and seamless digital experience. We believe every car buyer deserves access to verified listings, detailed specifications, and an elite-level browsing experience — all from the comfort of their screen.
+                    </p>
+                </div>
+            </div>
+
+            @* Vision Card *@
+            <div class="card-glass p-8 md:p-10 relative overflow-hidden group hover:border-accent-500/30 transition-all duration-500">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-accent-500/5 rounded-full blur-[60px] group-hover:bg-accent-500/10 transition-colors duration-500"></div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 rounded-2xl bg-accent-500/10 border border-accent-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-7 h-7 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl sm:text-3xl font-display font-bold text-white mb-4">Our Vision</h3>
+                    <p class="text-surface-400 text-base sm:text-lg leading-relaxed">
+                        To become the Philippines' most trusted and visually stunning automotive marketplace — where technology meets automotive passion. We envision a future where finding your dream car is as thrilling as driving it, powered by cutting-edge design and intelligent tools.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── HOW IT WORKS SECTION ── *@
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 bg-surface-900 border-t border-b border-surface-850 snap-section" id="how-it-works">
+    <div class="premium-container">
+        <div class="text-center mb-10 lg:mb-16">
+            <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-3">Seamless Journey</span>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-display font-black text-white leading-tight mb-6">
+                How It <span class="text-gradient">Works</span>
+            </h2>
+            <p class="text-surface-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
+                Acquiring a premium vehicle has never been this streamlined. Discover your next performance machine in four simple steps.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8">
+            <div class="card-glass p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
+                <div class="text-6xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors mb-2">01</div>
+                <h3 class="text-xl sm:text-2xl font-bold text-white mb-2">Browse & Discover</h3>
+                <p class="text-surface-400 text-base leading-relaxed">
+                    Filter through 50+ professionally listed premium sports cars, hybrids, and luxury SUVs with advanced search tools.
+                </p>
+            </div>
+            <div class="card-glass p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
+                <div class="text-6xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors mb-2">02</div>
+                <h3 class="text-xl sm:text-2xl font-bold text-white mb-2">Compare Vehicles</h3>
+                <p class="text-surface-400 text-base leading-relaxed">
+                    Add up to 4 models to our side-by-side technical specification comparison tool to find the perfect fit.
+                </p>
+            </div>
+            <div class="card-glass p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
+                <div class="text-6xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors mb-2">03</div>
+                <h3 class="text-xl sm:text-2xl font-bold text-white mb-2">Inquire with Experts</h3>
+                <p class="text-surface-400 text-base leading-relaxed">
+                    Send secure digital inquiries containing your custom details directly to our professional coordinators.
+                </p>
+            </div>
+            <div class="card-glass p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
+                <div class="text-6xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors mb-2">04</div>
+                <h3 class="text-xl sm:text-2xl font-bold text-white mb-2">Drive Home</h3>
+                <p class="text-surface-400 text-base leading-relaxed">
+                    Coordinate custom paperwork and claim your curated premium vehicle from our elite partners.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── WHY CHOOSE US SECTION ── *@
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 border-t border-surface-850 bg-surface-950 snap-section" id="why-revvup">
+    <div class="premium-container">
+        <div class="text-center mb-12 lg:mb-16">
+            <span class="text-accent-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-3">Why RevvUp</span>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-display font-black text-white leading-tight mb-6">
+                What Sets Us <span class="text-gradient">Apart</span>
+            </h2>
+            <p class="text-surface-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
+                We combine cutting-edge technology with automotive passion to deliver an unmatched marketplace experience.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            <div class="card-glass p-8 text-center group hover:border-primary-500/30 transition-all duration-500">
+                <div class="w-16 h-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:shadow-glow-sm transition-all duration-300">
+                    <svg class="w-8 h-8 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Verified Listings</h3>
+                <p class="text-surface-400 text-sm leading-relaxed">
+                    Every vehicle undergoes a thorough verification process. Browse with complete confidence knowing all specs and conditions are authenticated.
+                </p>
+            </div>
+
+            <div class="card-glass p-8 text-center group hover:border-primary-500/30 transition-all duration-500">
+                <div class="w-16 h-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:shadow-glow-sm transition-all duration-300">
+                    <svg class="w-8 h-8 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Smart Comparison</h3>
+                <p class="text-surface-400 text-sm leading-relaxed">
+                    Our advanced comparison tool lets you stack up to 4 vehicles side-by-side with detailed specifications, images, and performance metrics.
+                </p>
+            </div>
+
+            <div class="card-glass p-8 text-center group hover:border-primary-500/30 transition-all duration-500">
+                <div class="w-16 h-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:shadow-glow-sm transition-all duration-300">
+                    <svg class="w-8 h-8 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Premium Experience</h3>
+                <p class="text-surface-400 text-sm leading-relaxed">
+                    A world-class UI with stunning visuals, smooth animations, and an intuitive flow designed for automotive enthusiasts who expect the best.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── MEET THE TEAM SECTION ── *@
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 bg-surface-900 border-t border-b border-surface-850 snap-section" id="meet-the-team">
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary-500/4 rounded-full blur-[150px]"></div>
+    </div>
+
+    <div class="premium-container relative z-10">
+        <div class="text-center mb-10 lg:mb-14">
+            <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-3">The Crew</span>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-display font-black text-white leading-tight mb-6">
+                Meet the <span class="text-gradient">Team</span>
+            </h2>
+            <p class="text-surface-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
+                The passionate minds behind RevvUp — a multidisciplinary team united by a love for cars and great technology.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            @* Team Member 1 *@
+            <div class="card-glass overflow-hidden group hover:border-primary-500/30 transition-all duration-500">
+                <div class="relative aspect-square overflow-hidden">
+                    <img src="/images/team-member-1.png" alt="Arvin Albeos" asp-append-version="true"
+                         class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/20 to-transparent"></div>
+                </div>
+                <div class="p-6 text-center">
+                    <h4 class="text-lg font-bold text-white mb-1">Arvin Albeos</h4>
+                    <p class="text-primary-400 text-sm font-semibold mb-2">Project Manager</p>
+                    <p class="text-surface-500 text-xs leading-relaxed">
+                        Oversees the entire project lifecycle, ensuring timely delivery and alignment with business goals.
+                    </p>
+                </div>
+            </div>
+
+            @* Team Member 2 *@
+            <div class="card-glass overflow-hidden group hover:border-primary-500/30 transition-all duration-500">
+                <div class="relative aspect-square overflow-hidden">
+                    <img src="/images/team-member-2.png" alt="Ralph Adriane Dilao" asp-append-version="true"
+                         class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/20 to-transparent"></div>
+                </div>
+                <div class="p-6 text-center">
+                    <h4 class="text-lg font-bold text-white mb-1">Ralph Adriane Dilao</h4>
+                    <p class="text-primary-400 text-sm font-semibold mb-2">Back-End Developer</p>
+                    <p class="text-surface-500 text-xs leading-relaxed">
+                        Manages the database systems and backend logic.
+                    </p>
+                </div>
+            </div>
+
+            @* Team Member 3 *@
+            <div class="card-glass overflow-hidden group hover:border-primary-500/30 transition-all duration-500">
+                <div class="relative aspect-square overflow-hidden">
+                    <img src="/images/team-member-3.png" alt="John Michael Olasiman" asp-append-version="true"
+                         class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/20 to-transparent"></div>
+                </div>
+                <div class="p-6 text-center">
+                    <h4 class="text-lg font-bold text-white mb-1">John Michael Olasiman</h4>
+                    <p class="text-primary-400 text-sm font-semibold mb-2">UI/UX Designer & Frontend Developer</p>
+                    <p class="text-surface-500 text-xs leading-relaxed">
+                        Transforms user needs and feedback into intuitive interfaces and seamless user experiences.
+                    </p>
+                </div>
+            </div>
+
+            @* Team Member 4 *@
+            <div class="card-glass overflow-hidden group hover:border-primary-500/30 transition-all duration-500">
+                <div class="relative aspect-square overflow-hidden">
+                    <img src="/images/team-member-4.png" alt="Johndel Postrero" asp-append-version="true"
+                         class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/20 to-transparent"></div>
+                </div>
+                <div class="p-6 text-center">
+                    <h4 class="text-lg font-bold text-white mb-1">Johndel Postrero</h4>
+                    <p class="text-primary-400 text-sm font-semibold mb-2">Tester & Frontend Developer</p>
+                    <p class="text-surface-500 text-xs leading-relaxed">
+                        Ensures the website is free of bugs and errors, and improves the user experience.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── FOOTER SECTION (same as landing page) ── *@
+<section class="relative snap-section" id="about-footer">
+    <footer class="relative border-t border-surface-800/50 bg-surface-950">
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
+
+        <div class="premium-container py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                @* Brand Column *@
+                <div>
+                    <a href="/" class="inline-flex items-center gap-3 group mb-4">
+                        <div class="w-9 h-9 rounded-xl bg-surface-900/50 border border-surface-800/40 p-1.5 flex items-center justify-center shadow-glow-sm group-hover:shadow-glow transition-all duration-500">
+                            <img src="/images/logo.png" class="w-full h-full object-contain" alt="RevvUp Logo" />
+                        </div>
+                        <span class="text-xl font-display font-bold text-white">
+                            Revv<span class="text-gradient">Up</span>
+                        </span>
+                    </a>
+                    <p class="text-surface-400 text-sm leading-relaxed mb-4 max-w-sm">
+                        Premium automotive platform for curated car browsing and discovery.
+                    </p>
+                    <div class="flex gap-2">
+                        <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="Twitter">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="Instagram">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="YouTube">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                @* Quick Links *@
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Explore</h4>
+                    <ul class="space-y-2 text-sm text-surface-400">
+                        <li><a href="/Cars/Browse" class="hover:text-primary-400 transition-colors">Browse All Cars</a></li>
+                        <li><a href="/Cars/Browse?sortBy=newest" class="hover:text-primary-400 transition-colors">New Arrivals</a></li>
+                        <li><a href="/Cars/Browse?fuelType=Electric" class="hover:text-primary-400 transition-colors">Electric Vehicles</a></li>
+                        <li><a href="/Cars/Browse?bodyType=Coupe" class="hover:text-primary-400 transition-colors">Luxury Collection</a></li>
+                    </ul>
+                </div>
+
+                @* Buyer Tools *@
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Buyer Tools</h4>
+                    <ul class="space-y-2 text-sm text-surface-400">
+                        <li><a href="/Cars/Browse" class="hover:text-primary-400 transition-colors">Car Finder</a></li>
+                        <li><a href="/Cars/Compare" class="hover:text-primary-400 transition-colors">Compare Tool</a></li>
+                        <li><a href="/Dashboard/SavedCars" class="hover:text-primary-400 transition-colors">Saved Wishlist</a></li>
+                        <li><a href="/Dashboard/Messages" class="hover:text-primary-400 transition-colors">Inquiry Desk</a></li>
+                    </ul>
+                </div>
+
+                @* Company *@
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm text-surface-400">
+                        <li><a href="/Home/About" class="hover:text-primary-400 transition-colors">About RevvUp</a></li>
+                        <li><a href="/Home/About#how-it-works" class="hover:text-primary-400 transition-colors">How It Works</a></li>
+                        <li><a href="#" class="hover:text-primary-400 transition-colors">Careers</a></li>
+                        <li><a href="#" class="hover:text-primary-400 transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="divider my-6"></div>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-surface-500">
+                <p>&copy; @DateTime.Now.Year RevvUp. All rights reserved. Built with <span class="text-accent-500">♥</span></p>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-surface-350 transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-surface-350 transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</section>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ── Snappy Flick Scroll Manager ──
+    const sectionIds = ['about-hero', 'mission-vision', 'how-it-works', 'why-revvup', 'meet-the-team', 'about-footer'];
+    let currentIdx = 0;
+    let isLocked = false;
+    const cooldown = 900;
+
+    function snapTo(index) {
+        if (index < 0 || index >= sectionIds.length) return;
+        const el = document.getElementById(sectionIds[index]);
+        if (el) {
+            isLocked = true;
+            currentIdx = index;
+            el.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => { isLocked = false; }, cooldown);
+        }
+    }
+
+    const syncObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+                const idx = sectionIds.indexOf(entry.target.id);
+                if (idx !== -1 && !isLocked) {
+                    currentIdx = idx;
+                }
+            }
+        });
+    }, { threshold: [0.1, 0.4, 0.7], rootMargin: '-10% 0px -10% 0px' });
+
+    sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) syncObserver.observe(el);
+    });
+
+    // Capture Wheel Gestures
+    window.addEventListener('wheel', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        e.preventDefault();
+        if (isLocked) return;
+        
+        if (e.deltaY > 15) {
+            if (currentIdx < sectionIds.length - 1) snapTo(currentIdx + 1);
+        } else if (e.deltaY < -15) {
+            if (currentIdx > 0) snapTo(currentIdx - 1);
+        }
+    }, { passive: false });
+
+    // Capture Keyboard
+    window.addEventListener('keydown', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        
+        if (['ArrowDown', 'PageDown'].includes(e.key)) {
+            e.preventDefault();
+            if (currentIdx < sectionIds.length - 1) snapTo(currentIdx + 1);
+        } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
+            e.preventDefault();
+            if (currentIdx > 0) snapTo(currentIdx - 1);
+        } else if (e.key === 'Home') {
+            e.preventDefault();
+            snapTo(0);
+        } else if (e.key === 'End') {
+            e.preventDefault();
+            snapTo(sectionIds.length - 1);
+        }
+    });
+
+    // Capture Touch Swipes
+    let startY = 0;
+    window.addEventListener('touchstart', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        if (isLocked) return;
+        
+        const endY = e.touches[0].clientY;
+        const diff = startY - endY;
+        
+        if (Math.abs(diff) > 60) {
+            if (diff > 0) {
+                if (currentIdx < sectionIds.length - 1) snapTo(currentIdx + 1);
+            } else {
+                if (currentIdx > 0) snapTo(currentIdx - 1);
+            }
+        }
+    }, { passive: true });
+});
+</script>
+}

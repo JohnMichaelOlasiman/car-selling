@@ -23,6 +23,7 @@ public class Car
     public string Transmission { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
     public string Condition { get; set; } = string.Empty; // Excellent, Good, Fair
+    public string Engine { get; set; } = string.Empty; // e.g. 2.0L Turbo, Dual Electric Motor
     public string Description { get; set; } = string.Empty;
     public string Features { get; set; } = string.Empty; // Comma-separated list
     public int ViewCount { get; set; }
@@ -30,5 +31,12 @@ public class Car
     public string ImageUrls { get; set; } = string.Empty; // Semicolon-separated URLs
     public DateTime DateAdded { get; set; } = DateTime.UtcNow;
     public bool IsFeatured { get; set; }
-    public string Status { get; set; } = "Available"; // Available, Sold
+    public string Status { get; set; } = "Available"; // Available, Sold, Pending
+    public bool IsSold => Status == "Sold";
+
+    // ── Seller Info ──
+    /// <summary>Id of the ApplicationUser who listed this car. Null = admin seeded.</summary>
+    public string? SellerId { get; set; }
+    /// <summary>Cached display name for fast render without join.</summary>
+    public string? SellerDisplayName { get; set; }
 }

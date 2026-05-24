@@ -1,6 +1,15 @@
 @model RevvUp.Web.Models.BrowseViewModel
 @{
     ViewData["Title"] = "Browse Cars";
+    int totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+    int currentPage = Model.Page;
+    int maxDisplayedPages = 5;
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, startPage + maxDisplayedPages - 1);
+    if (endPage - startPage + 1 < maxDisplayedPages)
+    {
+        startPage = Math.Max(1, endPage - maxDisplayedPages + 1);
+    }
 }
 
 <div class="pt-20 min-h-screen" x-data="revvBrowse()">
@@ -10,7 +19,7 @@
             <div class="absolute top-0 left-1/4 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl"></div>
             <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-accent-500/5 rounded-full blur-3xl"></div>
         </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="premium-container relative z-10">
             <div class="text-center mb-8 animate-fade-in-down">
                 <h1 class="text-4xl sm:text-5xl font-display font-bold text-white mb-3">
                     Find Your <span class="text-gradient">Dream Ride</span>
@@ -62,23 +71,79 @@
                 @foreach (var bt in Model.AvailableBodyTypes)
                 {
                     var isActive = Model.BodyType == bt;
-                    <a href="@Url.Action("Browse", new { bodyType = isActive ? null : bt, search = Model.Search })"
-                       class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
-                              @(isActive ? "bg-primary-500 text-white shadow-glow-sm" : "bg-surface-800/80 text-surface-400 border border-surface-700/50 hover:border-primary-500/30 hover:text-white")">
+                    <button type="button"
+                            onclick="toggleBodyTypePill('@bt')"
+                            data-body-type="@bt"
+                            class="body-type-pill px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:border-primary-500/30 hover:text-white
+                                   @(isActive ? "bg-primary-500 text-white shadow-glow-sm" : "bg-surface-800/80 text-surface-400 border border-surface-700/50")">
                         @bt
-                    </a>
+                    </button>
                 }
             </div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    @* ── Compare Mode Banner ── *@
+    <div x-data="{
+        fromCompare: new URLSearchParams(window.location.search).get('fromCompare') === 'true',
+        slotsUsed: 0,
+        dismissed: false,
+        init() {
+            if (this.fromCompare) {
+                let ids = JSON.parse(localStorage.getItem('compareCars') || '[]');
+                this.slotsUsed = ids.length;
+            }
+        }
+    }">
+        <div x-show="fromCompare && !dismissed" x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="premium-container py-0 mt-2">
+            <div class="bg-accent-500/10 border border-accent-500/30 rounded-2xl px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 backdrop-blur-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-accent-500/20 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-white">Comparison Mode</p>
+                        <p class="text-xs text-surface-400">Click the <span class="text-accent-400 font-semibold">Compare</span> button on any card to add it. <span class="text-white font-semibold" x-text="(4 - slotsUsed) + ' slots remaining'"></span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a x-bind:href="'/Cars/Compare?ids=' + JSON.parse(localStorage.getItem('compareCars') || '[]').join(',')"
+                       class="btn-primary btn-sm text-xs">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                        Go to Compare
+                    </a>
+                    <button x-on:click="dismissed = true" class="text-surface-400 hover:text-white transition-colors p-1" title="Dismiss">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="premium-container py-8">
         <div class="flex gap-8">
             @* ── Filter Sidebar (Desktop) ── *@
             <aside class="hidden lg:block w-72 flex-shrink-0">
                 <div class="sticky top-24">
-                    <form asp-action="Browse" method="get" class="card p-5 space-y-5" id="filter-form">
+                    <form asp-action="Browse" method="get" class="card p-5 space-y-5" id="filter-form"
+                          hx-get="@Url.Action("Browse")"
+                          hx-target="#browse-results-container"
+                          hx-select="#browse-results-container"
+                          hx-swap="innerHTML"
+                          hx-push-url="true"
+                          hx-trigger="submit">
                         <input type="hidden" name="search" value="@Model.Search" />
+                        <input type="hidden" name="sortBy" id="filter-sortBy" value="@Model.SortBy" />
 
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-display font-bold text-white flex items-center gap-2">
@@ -87,7 +152,14 @@
                                 </svg>
                                 Filters
                             </h3>
-                            <a href="@Url.Action("Browse")" class="text-xs text-primary-400 hover:text-primary-300 transition-colors">
+                            <a href="@Url.Action("Browse")"
+                               hx-get="@Url.Action("Browse")"
+                               hx-target="#browse-results-container"
+                               hx-select="#browse-results-container"
+                               hx-swap="innerHTML"
+                               hx-push-url="true"
+                               onclick="const form = document.getElementById('filter-form'); if (form) { form.reset(); form.querySelectorAll('select').forEach(s => s.value = ''); form.querySelectorAll('input[type=number]').forEach(i => i.value = ''); const hs = form.querySelector('input[name=search]'); if (hs) hs.value = ''; const sby = document.getElementById('filter-sortBy'); if (sby) sby.value = 'newest'; } const cs = document.getElementById('car-search'); if (cs) { cs.value = ''; cs.dispatchEvent(new Event('input')); }"
+                               class="text-xs text-primary-400 hover:text-primary-300 transition-colors">
                                 Clear all
                             </a>
                         </div>
@@ -97,7 +169,7 @@
                         @* ── Brand ── *@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Brand</label>
-                            <select name="brand" class="input text-sm" onchange="this.form.submit()">
+                            <select name="brand" class="input text-sm">
                                 <option value="">All Brands</option>
                                 @foreach (var m in Model.AvailableBrands)
                                 {
@@ -109,7 +181,7 @@
                         @* ── Body Type ── *@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Body Type</label>
-                            <select name="bodyType" class="input text-sm" onchange="this.form.submit()">
+                            <select name="bodyType" class="input text-sm">
                                 <option value="">All Types</option>
                                 @foreach (var b in Model.AvailableBodyTypes)
                                 {
@@ -121,7 +193,7 @@
                         @* ── Fuel Type ── *@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Fuel Type</label>
-                            <select name="fuelType" class="input text-sm" onchange="this.form.submit()">
+                            <select name="fuelType" class="input text-sm">
                                 <option value="">All Fuel Types</option>
                                 @foreach (var f in Model.AvailableFuelTypes)
                                 {
@@ -133,7 +205,7 @@
                         @* ── Transmission ── *@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Transmission</label>
-                            <select name="transmission" class="input text-sm" onchange="this.form.submit()">
+                            <select name="transmission" class="input text-sm">
                                 <option value="">All</option>
                                 @foreach (var t in Model.AvailableTransmissions)
                                 {
@@ -146,8 +218,8 @@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Price Range</label>
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="number" name="minPrice" value="@Model.MinPrice" class="input text-sm" placeholder="Min" onchange="this.form.submit()" />
-                                <input type="number" name="maxPrice" value="@Model.MaxPrice" class="input text-sm" placeholder="Max" onchange="this.form.submit()" />
+                                <input type="number" name="minPrice" value="@Model.MinPrice" class="input text-sm" placeholder="Min" />
+                                <input type="number" name="maxPrice" value="@Model.MaxPrice" class="input text-sm" placeholder="Max" />
                             </div>
                         </div>
 
@@ -155,15 +227,15 @@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Year</label>
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="number" name="minYear" value="@Model.MinYear" class="input text-sm" placeholder="From" onchange="this.form.submit()" />
-                                <input type="number" name="maxYear" value="@Model.MaxYear" class="input text-sm" placeholder="To" onchange="this.form.submit()" />
+                                <input type="number" name="minYear" value="@Model.MinYear" class="input text-sm" placeholder="From" />
+                                <input type="number" name="maxYear" value="@Model.MaxYear" class="input text-sm" placeholder="To" />
                             </div>
                         </div>
 
                         @* ── Mileage ── *@
                         <div>
                             <label class="block text-sm font-medium text-surface-300 mb-2">Max Mileage</label>
-                            <input type="number" name="maxMileage" value="@Model.MaxMileage" class="input text-sm" placeholder="e.g. 50000" onchange="this.form.submit()" />
+                            <input type="number" name="maxMileage" value="@Model.MaxMileage" class="input text-sm" placeholder="e.g. 50000" />
                         </div>
 
                         <div class="divider"></div>
@@ -184,7 +256,7 @@
             </button>
 
             @* ── Main Content ── *@
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0" id="browse-results-container">
                 @* ── Results Header ── *@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
@@ -196,12 +268,13 @@
                     <div class="flex items-center gap-3">
                         <label class="text-xs text-surface-500">Sort:</label>
                         <select id="sort-select" class="input text-sm py-2 pr-8 w-44"
-                                onchange="window.location.href = updateQueryParam('sortBy', this.value)">
+                                onchange="changeSort(this.value)">
                             <option value="newest" selected="@(Model.SortBy == "newest")">Newest</option>
                             <option value="price-low" selected="@(Model.SortBy == "price-low")">Price: Low</option>
                             <option value="price-high" selected="@(Model.SortBy == "price-high")">Price: High</option>
                             <option value="year-new" selected="@(Model.SortBy == "year-new")">Year: Newest</option>
                             <option value="mileage-low" selected="@(Model.SortBy == "mileage-low")">Mileage: Low</option>
+                            <option value="mileage-high" selected="@(Model.SortBy == "mileage-high")">Mileage: High</option>
                         </select>
                     </div>
                 </div>
@@ -211,31 +284,119 @@
                     @await Html.PartialAsync("_CarGrid", Model)
                 </div>
 
-                @* ── Load More ── *@
-                @if (Model.HasMore)
+                @* ── Premium Pagination ── *@
+                @if (totalPages > 1)
                 {
-                    <div class="text-center mt-8" id="load-more-container">
-                        <button id="load-more-btn"
-                                hx-get="@Url.Action("Browse", new { search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy, page = Model.Page + 1 })"
-                                hx-target="#car-grid"
-                                hx-swap="beforeend"
-                                hx-indicator="#load-spinner"
-                                class="btn-outline group">
-                            <span class="flex items-center gap-2">
-                                Load More Cars
-                                <svg class="w-4 h-4 group-hover:translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                                </svg>
-                            </span>
-                        </button>
-                        <div id="load-spinner" class="htmx-indicator mt-4">
-                            <div class="flex items-center justify-center gap-3 text-surface-400">
-                                <svg class="w-6 h-6 animate-spin text-primary-400" viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 70" />
-                                </svg>
-                                <span class="text-sm">Finding more amazing rides...</span>
-                            </div>
-                        </div>
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12 pt-6 border-t border-surface-800/50 animate-fade-in-up">
+                        @* Pagination Info *@
+                        <p class="text-sm text-surface-400">
+                            Showing Page <span class="text-white font-semibold">@currentPage</span> of <span class="text-white font-semibold">@totalPages</span>
+                        </p>
+
+                        @* Pagination Links *@
+                        <nav class="flex items-center gap-1.5" aria-label="Pagination">
+                            @* First Page / Prev Page *@
+                            @if (currentPage > 1)
+                            {
+                                <a href="@Url.Action("Browse", new { page = 1, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-get="@Url.Action("Browse", new { page = 1, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-target="#browse-results-container"
+                                   hx-select="#browse-results-container"
+                                   hx-swap="innerHTML"
+                                   hx-push-url="true"
+                                   class="w-10 h-10 rounded-xl bg-surface-800/80 text-surface-400 border border-surface-700/50 flex items-center justify-center transition-all duration-300 hover:border-primary-500/30 hover:text-white hover:bg-primary-500/5"
+                                   title="First Page">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 5.25-7.5 7.5 7.5 7.5m-6-15-7.5 7.5 7.5 7.5" />
+                                    </svg>
+                                </a>
+                                <a href="@Url.Action("Browse", new { page = currentPage - 1, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-get="@Url.Action("Browse", new { page = currentPage - 1, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-target="#browse-results-container"
+                                   hx-select="#browse-results-container"
+                                   hx-swap="innerHTML"
+                                   hx-push-url="true"
+                                   class="w-10 h-10 rounded-xl bg-surface-800/80 text-surface-400 border border-surface-700/50 flex items-center justify-center transition-all duration-300 hover:border-primary-500/30 hover:text-white hover:bg-primary-500/5"
+                                   title="Previous Page">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                    </svg>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="w-10 h-10 rounded-xl bg-surface-850 text-surface-600 border border-surface-800/30 flex items-center justify-center cursor-not-allowed">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                    </svg>
+                                </span>
+                            }
+
+                            @* Ellipsis before startPage *@
+                            @if (startPage > 1)
+                            {
+                                <span class="w-8 text-center text-surface-500">...</span>
+                            }
+
+                            @* Page Number Pills *@
+                            @for (int p = startPage; p <= endPage; p++)
+                            {
+                                var isCurrent = (p == currentPage);
+                                <a href="@Url.Action("Browse", new { page = p, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-get="@Url.Action("Browse", new { page = p, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-target="#browse-results-container"
+                                   hx-select="#browse-results-container"
+                                   hx-swap="innerHTML"
+                                   hx-push-url="true"
+                                   class="w-10 h-10 rounded-xl flex items-center justify-center font-display font-medium text-sm transition-all duration-300
+                                          @(isCurrent ? "bg-primary-500 text-white shadow-glow-sm border border-primary-500" : "bg-surface-800/80 text-surface-400 border border-surface-700/50 hover:border-primary-500/30 hover:text-white hover:bg-primary-500/5")">
+                                    @p
+                                </a>
+                            }
+
+                            @* Ellipsis after endPage *@
+                            @if (endPage < totalPages)
+                            {
+                                <span class="w-8 text-center text-surface-500">...</span>
+                            }
+
+                            @* Next Page / Last Page *@
+                            @if (currentPage < totalPages)
+                            {
+                                <a href="@Url.Action("Browse", new { page = currentPage + 1, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-get="@Url.Action("Browse", new { page = currentPage + 1, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-target="#browse-results-container"
+                                   hx-select="#browse-results-container"
+                                   hx-swap="innerHTML"
+                                   hx-push-url="true"
+                                   class="w-10 h-10 rounded-xl bg-surface-800/80 text-surface-400 border border-surface-700/50 flex items-center justify-center transition-all duration-300 hover:border-primary-500/30 hover:text-white hover:bg-primary-500/5"
+                                   title="Next Page">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </a>
+                                <a href="@Url.Action("Browse", new { page = totalPages, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-get="@Url.Action("Browse", new { page = totalPages, search = Model.Search, brand = Model.Brand, bodyType = Model.BodyType, fuelType = Model.FuelType, transmission = Model.Transmission, minPrice = Model.MinPrice, maxPrice = Model.MaxPrice, minYear = Model.MinYear, maxYear = Model.MaxYear, maxMileage = Model.MaxMileage, sortBy = Model.SortBy })"
+                                   hx-target="#browse-results-container"
+                                   hx-select="#browse-results-container"
+                                   hx-swap="innerHTML"
+                                   hx-push-url="true"
+                                   class="w-10 h-10 rounded-xl bg-surface-800/80 text-surface-400 border border-surface-700/50 flex items-center justify-center transition-all duration-300 hover:border-primary-500/30 hover:text-white hover:bg-primary-500/5"
+                                   title="Last Page">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 5.25 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="w-10 h-10 rounded-xl bg-surface-850 text-surface-600 border border-surface-800/30 flex items-center justify-center cursor-not-allowed">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </span>
+                            }
+                        </nav>
                     </div>
                 }
 
@@ -273,11 +434,18 @@ function searchAutocomplete() {
             try {
                 const res = await fetch(`/Cars/SearchSuggestions?q=${encodeURIComponent(this.query)}`);
                 this.suggestions = await res.json();
-                this.showSuggestions = this.suggestions.length > 0;
+                const input = document.getElementById('car-search');
+                this.showSuggestions = this.suggestions.length > 0 && document.activeElement === input;
             } catch(e) { this.suggestions = []; }
         },
         submitSearch() {
-            window.location.href = `/Cars/Browse?search=${encodeURIComponent(this.query)}`;
+            const hiddenSearch = document.querySelector('#filter-form input[name="search"]');
+            if (hiddenSearch) {
+                hiddenSearch.value = this.query;
+                htmx.trigger(hiddenSearch.form, 'submit');
+            } else {
+                window.location.href = `/Cars/Browse?search=${encodeURIComponent(this.query)}`;
+            }
         }
     };
 }
@@ -288,6 +456,16 @@ function revvBrowse() {
 }
 
 // ── Sort helper ──
+function changeSort(val) {
+    const hiddenSort = document.getElementById('filter-sortBy');
+    if (hiddenSort) {
+        hiddenSort.value = val;
+        htmx.trigger(hiddenSort.form, 'submit');
+    } else {
+        window.location.href = updateQueryParam('sortBy', val);
+    }
+}
+
 function updateQueryParam(key, value) {
     const url = new URL(window.location.href);
     url.searchParams.set(key, value);
@@ -295,8 +473,74 @@ function updateQueryParam(key, value) {
     return url.toString();
 }
 
+// ── Body Type Pill Toggle Helper ──
+function toggleBodyTypePill(bt) {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+    const bodyTypeSelect = form.querySelector('select[name="bodyType"]');
+    if (!bodyTypeSelect) return;
+    
+    if (bodyTypeSelect.value === bt) {
+        bodyTypeSelect.value = '';
+    } else {
+        bodyTypeSelect.value = bt;
+    }
+    
+    htmx.trigger(form, 'submit');
+}
+
+// ── Sidebar Form State Sync from URL ──
+function syncSidebarFromUrl() {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const fields = ['brand', 'bodyType', 'fuelType', 'transmission', 'minPrice', 'maxPrice', 'minYear', 'maxYear', 'maxMileage'];
+    fields.forEach(field => {
+        const input = form.querySelector(`[name="${field}"]`);
+        if (input) {
+            input.value = urlParams.get(field) || '';
+        }
+    });
+    
+    const searchInput = form.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.value = urlParams.get('search') || '';
+    }
+    
+    const sortByInput = document.getElementById('filter-sortBy');
+    if (sortByInput) {
+        sortByInput.value = urlParams.get('sortBy') || 'newest';
+    }
+    
+    const carSearch = document.getElementById('car-search');
+    if (carSearch) {
+        carSearch.value = urlParams.get('search') || '';
+        carSearch.dispatchEvent(new Event('input'));
+    }
+
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        sortSelect.value = urlParams.get('sortBy') || 'newest';
+    }
+
+    // ── Sync Quick Filter Pills Highlight ──
+    const bodyType = urlParams.get('bodyType') || '';
+    document.querySelectorAll('.body-type-pill').forEach(pill => {
+        const bt = pill.getAttribute('data-body-type');
+        if (bt === bodyType) {
+            pill.classList.remove('bg-surface-800/80', 'text-surface-400', 'border', 'border-surface-700/50');
+            pill.classList.add('bg-primary-500', 'text-white', 'shadow-glow-sm');
+        } else {
+            pill.classList.remove('bg-primary-500', 'text-white', 'shadow-glow-sm');
+            pill.classList.add('bg-surface-800/80', 'text-surface-400', 'border', 'border-surface-700/50');
+        }
+    });
+}
+
 // ── Intersection Observer for scroll reveal ──
 document.addEventListener('DOMContentLoaded', () => {
+    syncSidebarFromUrl();
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry, i) => {
             if (entry.isIntersecting) {
@@ -309,8 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.car-card').forEach(card => observer.observe(card));
 });
 
-// ── Re-observe new cards after HTMX swap ──
+// ── Re-observe and Sync after HTMX Swap ──
 document.body.addEventListener('htmx:afterSwap', function() {
+    syncSidebarFromUrl();
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry, i) => {
             if (entry.isIntersecting) {
@@ -322,5 +567,7 @@ document.body.addEventListener('htmx:afterSwap', function() {
     }, { threshold: 0.1 });
     document.querySelectorAll('.car-card:not(.animate-fade-in-up)').forEach(card => observer.observe(card));
 });
+
+window.addEventListener('popstate', syncSidebarFromUrl);
 </script>
 }

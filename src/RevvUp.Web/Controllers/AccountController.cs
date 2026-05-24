@@ -137,6 +137,11 @@ public class AccountController : Controller
         if (user == null)
             return RedirectToAction("Login");
 
+        var sellerCars = (await _carService.GetCarsBySellerIdAsync(user.Id)).ToList();
+        var activeListingsCount = sellerCars.Count(c => c.Status == "Available");
+        var soldListingsCount = sellerCars.Count(c => c.Status == "Sold");
+        var totalListingsCount = sellerCars.Count;
+
         var model = new ProfileViewModel
         {
             DisplayName = user.DisplayName,
@@ -145,7 +150,15 @@ public class AccountController : Controller
             Location = user.Location,
             PhoneNumber = user.PhoneNumber,
             AvatarUrl = user.AvatarUrl,
-            JoinedAt = user.JoinedAt
+            JoinedAt = user.JoinedAt,
+            SellerDisplayName = user.SellerDisplayName,
+            SellerPhoneNumber = user.SellerPhoneNumber,
+            SellerLocation = user.SellerLocation,
+            SellerBio = user.SellerBio,
+            SellerListingsCount = activeListingsCount,
+            ActiveListings = activeListingsCount,
+            SoldListings = soldListingsCount,
+            TotalListings = totalListingsCount
         };
 
         var favorites = await _carService.GetFavoritesByUserIdAsync(user.Id);
@@ -174,6 +187,12 @@ public class AccountController : Controller
         ViewBag.FavoritesCount = favorites.Count();
         ViewBag.InquiriesCount = inquiries.Count();
 
+        var sellerCars = (await _carService.GetCarsBySellerIdAsync(user.Id)).ToList();
+        model.SellerListingsCount = sellerCars.Count(c => c.Status == "Available");
+        model.ActiveListings = sellerCars.Count(c => c.Status == "Available");
+        model.SoldListings = sellerCars.Count(c => c.Status == "Sold");
+        model.TotalListings = sellerCars.Count;
+
         if (!ModelState.IsValid)
             return View(model);
 
@@ -181,6 +200,10 @@ public class AccountController : Controller
         user.Bio = model.Bio;
         user.Location = model.Location;
         user.PhoneNumber = model.PhoneNumber;
+        user.SellerDisplayName = model.SellerDisplayName;
+        user.SellerPhoneNumber = model.SellerPhoneNumber;
+        user.SellerLocation = model.SellerLocation;
+        user.SellerBio = model.SellerBio;
 
         var result = await _userManager.UpdateAsync(user);
 
@@ -200,6 +223,7 @@ public class AccountController : Controller
 
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
     {
         if (avatarFile == null || avatarFile.Length == 0)
@@ -207,10 +231,10 @@ public class AccountController : Controller
             return BadRequest("Please select a file to upload.");
         }
 
-        // Validate image size (max 2MB)
-        if (avatarFile.Length > 2 * 1024 * 1024)
+        // Validate image size (max 20MB)
+        if (avatarFile.Length > 20 * 1024 * 1024)
         {
-            return BadRequest("Image must be under 2MB.");
+            return BadRequest("Image must be under 20MB.");
         }
 
         // Validate file type
@@ -260,6 +284,7 @@ public class AccountController : Controller
 
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteAvatar()
     {
         var user = await _userManager.GetUserAsync(User);

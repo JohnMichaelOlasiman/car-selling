@@ -77,4 +77,26 @@ public class ProfileViewModel
 
     public string? AvatarUrl { get; set; }
     public DateTime JoinedAt { get; set; }
+
+    // ── Seller Info ──
+    [StringLength(100)]
+    [Display(Name = "Seller Display Name")]
+    public string? SellerDisplayName { get; set; }
+
+    [Phone]
+    [Display(Name = "Seller Contact Number")]
+    public string? SellerPhoneNumber { get; set; }
+
+    [StringLength(200)]
+    [Display(Name = "Seller Location / Address")]
+    public string? SellerLocation { get; set; }
+
+    [StringLength(500)]
+    [Display(Name = "Seller Short Bio / Description")]
+    public string? SellerBio { get; set; }
+
+    public int SellerListingsCount { get; set; }
+    public int ActiveListings { get; set; }
+    public int SoldListings { get; set; }
+    public int TotalListings { get; set; }
 }

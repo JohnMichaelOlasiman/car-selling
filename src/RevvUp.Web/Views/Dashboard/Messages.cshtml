@@ -1,271 +1,474 @@
 @* ============================================================
    RevvUp — Dashboard Messenger Console
-   Dynamic, real-time two-pane conversation board
+   Sleek dark-mode Facebook Messenger-style UI (30% / 70% split)
    ============================================================ *@
 @model List<RevvUp.Web.Controllers.ChatThreadViewModel>
 @{
-    ViewData["Title"] = "Messenger";
+    ViewData["Title"] = "Inquiry Desk";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewData["FitToScreen"] = true;
+    ViewData["UseCompactFooter"] = true;
 }
 
-<div class="h-[calc(100vh-12rem)] flex gap-6 animate-fade-in-up" 
-     x-data="{
-         threads: @Json.Serialize(Model),
-         selectedThread: null,
-         messages: [],
-         newMessageText: '',
-         loading: false,
-         pollInterval: null,
+<style>
+    /* 1. Rigid container height relative to the viewport */
+    .inbox-container {
+        height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 180px) !important;
+        min-height: 450px !important;
+        overflow: hidden !important;
+    }
+    @@media (min-width: 1024px) {
+        .inbox-container {
+            height: calc(100vh - 145px) !important;
+            max-height: calc(100vh - 145px) !important;
+        }
+    }
 
-         async selectThread(thread) {
-             this.selectedThread = thread;
-             this.messages = [];
-             this.loading = true;
-             this.newMessageText = '';
-             
-             await this.fetchMessages();
-             this.loading = false;
-             this.scrollToBottom();
+    /* 2. Chat bubble dynamic auto height & width */
+    .message-bubble {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        width: fit-content !important;
+        display: block !important;
+    }
+    .message-bubble p {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        line-height: 1.5 !important;
+        display: block !important;
+    }
 
-             // Setup real-time polling
-             if (this.pollInterval) clearInterval(this.pollInterval);
-             this.pollInterval = setInterval(() => {
-                 this.fetchMessages(true);
-             }, 3000);
-         },
+    /* 3. Visible scrollbar rules for threads sidebar & conversation panels */
+    .custom-scrollbar {
+        overflow-y: auto !important;
+        scrollbar-width: thin !important; /* Firefox compatibility */
+        scrollbar-color: rgba(59, 130, 246, 0.45) rgba(15, 23, 42, 0.15) !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+        display: block !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.2) !important;
+        border-radius: 9999px !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.45) !important;
+        border-radius: 9999px !important;
+        border: 2px solid rgba(10, 14, 20, 0.8) !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.75) !important;
+    }
 
-         async fetchMessages(isSilent = false) {
-             if (!this.selectedThread) return;
-             try {
-                 let res = await fetch(`/Dashboard/GetChatHistory?inquiryId=${this.selectedThread.inquiryId}`);
-                 if (res.ok) {
-                     let data = await res.json();
-                     
-                     // If silent poll, only update if count changed or last message text/id is different
-                     if (isSilent) {
-                         if (data.length !== this.messages.length || (data.length > 0 && data[data.length-1].id !== this.messages[this.messages.length-1].id)) {
-                             this.messages = data;
-                             this.scrollToBottom();
-                         }
-                     } else {
-                         this.messages = data;
-                         this.scrollToBottom();
-                     }
-                 }
-             } catch (err) {
-                 console.error('Error fetching chat history:', err);
-             }
-         },
+    /* 4. Fix vertical row spacing stretching */
+    .message-row {
+        height: auto !important;
+        align-items: flex-start !important;
+    }
+</style>
 
-         async sendMessage() {
-             if (!this.newMessageText.trim() || !this.selectedThread) return;
-             
-             let text = this.newMessageText;
-             this.newMessageText = ''; // Clear early for instant feel
-
-             try {
-                 let res = await fetch('/Dashboard/SendChatMessage', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]')?.value || ''
-                     },
-                     body: JSON.stringify({
-                         inquiryId: this.selectedThread.inquiryId,
-                         messageText: text
-                     })
-                 });
-
-                 if (res.ok) {
-                     let newMsg = await res.json();
-                     this.messages.push(newMsg);
-                     this.scrollToBottom();
-
-                     // Update the snippet in the sidebar thread list instantly
-                     let t = this.threads.find(x => x.inquiryId === this.selectedThread.inquiryId);
-                     if (t) {
-                         t.lastMessageSnippet = text.length > 40 ? text.substring(0, 37) + '...' : text;
-                         t.lastMessageTime = new Date().toISOString();
-                     }
-                 } else {
-                     alert('Failed to send message.');
-                 }
-             } catch (err) {
-                 console.error('Error sending message:', err);
-                 alert('Error sending message.');
-             }
-         },
-
-         scrollToBottom() {
-             this.$nextTick(() => {
-                 let chatContainer = this.$refs.chatContainer;
-                 if (chatContainer) {
-                     chatContainer.scrollTop = chatContainer.scrollHeight;
-                 }
-             });
-         },
-
-         formatTime(isoString) {
-             if (!isoString) return '';
-             let d = new Date(isoString);
-             return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-         }
-     }"
-     x-init="
-         // Auto-select first thread if exists
-         if (threads && threads.length > 0) {
-             selectThread(threads[0]);
-         }
-     "
-     x-on:destroy="if (pollInterval) clearInterval(pollInterval)">
+<div class="py-2 animate-fade-in-up flex-grow flex flex-col inbox-container overflow-hidden">
+<div class="h-full flex flex-col lg:flex-row items-stretch rounded-2xl overflow-hidden border border-surface-800/60 shadow-elevated bg-surface-900/20"
+     x-data="messengerConsole">
 
     @Html.AntiForgeryToken()
 
-    @* ── Left Pane: Active Threads ── *@
-    <div class="w-full md:w-80 flex-shrink-0 flex flex-col bg-surface-900 border border-surface-800 rounded-2xl overflow-hidden">
-        <div class="p-4 border-b border-surface-800 bg-surface-950/50">
-            <h2 class="text-lg font-display font-bold text-white">Conversations</h2>
-            <p class="text-xs text-surface-400 mt-1">Connect with dealership representatives regarding your inquiries.</p>
+    @* ── Left Panel (30% Width): Conversation Threads ── *@
+    <div class="w-full lg:w-[30%] flex-shrink-0 flex flex-col bg-surface-900 border-r border-surface-800 h-full overflow-hidden">
+        @* Header & Tabs *@
+        <div class="p-4 border-b border-surface-800/80 bg-surface-950/20 space-y-4">
+            <div>
+                <span class="text-primary-400 text-[10px] font-extrabold uppercase tracking-[0.2em] block mb-1">Active Inbox</span>
+                <h2 class="text-xl font-display font-black text-white">Inquiries</h2>
+            </div>
+            
+            @* Premium Double-Tab Bar *@
+            <div class="flex p-1 rounded-xl bg-surface-950/60 border border-surface-800/80">
+                <button type="button"
+                        class="flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-350 flex items-center justify-center gap-1.5 select-none"
+                        x-on:click="switchTab('buyer')"
+                        x-bind:class="activeTab === 'buyer' 
+                                      ? 'bg-primary-600 text-white shadow-glow-sm' 
+                                      : 'text-surface-400 hover:text-white hover:bg-white/5'">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                    <span>Buyer</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded-full font-extrabold bg-surface-900 border border-surface-800 text-surface-300 transition-all"
+                          x-show="threads.filter(t => !t.isSeller).length > 0"
+                          x-text="threads.filter(t => !t.isSeller).length"></span>
+                </button>
+                <button type="button"
+                        class="flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-350 flex items-center justify-center gap-1.5 select-none"
+                        x-on:click="switchTab('seller')"
+                        x-bind:class="activeTab === 'seller' 
+                                      ? 'bg-primary-600 text-white shadow-glow-sm' 
+                                      : 'text-surface-400 hover:text-white hover:bg-white/5'">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-9 0v-7.5A.75.75 0 0 1 6 12.75h3a.75.75 0 0 1 .75.75V21m-4.5-9.75V9A3 3 0 0 0 3 6h18a3 3 0 0 0-3-3v3" />
+                    </svg>
+                    <span>Seller</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded-full font-extrabold bg-surface-900 border border-surface-800 text-surface-300 transition-all"
+                          x-show="threads.filter(t => t.isSeller).length > 0"
+                          x-text="threads.filter(t => t.isSeller).length"></span>
+                </button>
+            </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-3 space-y-2">
-            <template x-if="threads.length === 0">
-                <div class="text-center py-12 px-4">
-                    <svg class="w-12 h-12 text-surface-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-                    </svg>
-                    <p class="text-sm font-medium text-surface-400">No active threads</p>
-                    <p class="text-xs text-surface-500 mt-1">Your vehicle inquiries will list here.</p>
+        @* Thread list *@
+        <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+            <template x-if="threads.filter(t => t.isSeller === (activeTab === 'seller')).length === 0">
+                <div class="text-center py-16 px-4">
+                    <div class="w-12 h-12 rounded-full bg-surface-800/50 flex items-center justify-center mx-auto mb-4 border border-surface-700/30">
+                        <svg class="w-6 h-6 text-surface-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-bold text-white">No active inquiries</p>
+                    <p class="text-xs text-surface-500 mt-1 leading-relaxed" x-text="activeTab === 'buyer' ? 'Submit an inquiry on any vehicle catalog card to initiate contact.' : 'Inquiries submitted by buyers on your listed cars will appear here.'"></p>
                 </div>
             </template>
 
-            <template x-for="thread in threads" :key="thread.inquiryId">
-                <button type="button"
-                        class="w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-start gap-3 relative group"
-                        x-on:click="selectThread(thread)"
-                        x-bind:class="selectedThread && selectedThread.inquiryId === thread.inquiryId 
-                                      ? 'bg-primary-600/10 border-primary-500/30' 
-                                      : 'bg-surface-950/20 border-transparent hover:bg-white/5 hover:border-surface-800'">
+            <template x-for="thread in threads.filter(t => t.isSeller === (activeTab === 'seller'))" :key="thread.inquiryId">
+                <div role="button"
+                     class="w-full text-left p-3 rounded-xl border transition-all duration-300 flex items-center gap-3 relative group cursor-pointer"
+                     x-on:click="selectThread(thread)"
+                     x-bind:class="selectedThread && selectedThread.inquiryId === thread.inquiryId 
+                                   ? 'bg-primary-500/10 border-primary-500/30' 
+                                   : 'bg-surface-950/20 border-transparent hover:bg-white/5 hover:border-surface-800/40'">
                     
-                    @* Vehicle image *@
-                    <img :src="thread.carImageUrl" 
-                         class="w-12 h-12 rounded-lg object-cover bg-surface-800 flex-shrink-0 border border-surface-700/50" 
-                         alt="" />
+                    @* Dealer Avatar / Initial *@
+                    <div class="relative flex-shrink-0">
+                        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-sm font-bold text-white shadow-glow-sm">
+                            <span x-text="thread.otherPartyName.substring(0, 1).toUpperCase()"></span>
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-surface-900"></span>
+                    </div>
 
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-1 mb-1">
-                            <span class="text-xs font-bold text-white truncate" x-text="thread.otherPartyName"></span>
-                            <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                    @* Details *@
+                    <div class="flex-1 min-w-0 pr-6">
+                        <div class="flex items-center justify-between gap-1 mb-0.5">
+                            <span class="text-xs font-extrabold text-white truncate" x-text="thread.otherPartyName"></span>
+                            <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded flex-shrink-0"
                                   x-text="thread.otherPartyRole"
                                   x-bind:class="thread.isSeller ? 'bg-accent-500/10 text-accent-400' : 'bg-primary-500/10 text-primary-400'">
                             </span>
                         </div>
-                        <p class="text-[11px] text-surface-300 font-medium truncate" x-text="thread.carName"></p>
-                        <p class="text-[11px] text-surface-400 truncate mt-0.5" x-text="thread.lastMessageSnippet"></p>
+                        <p class="text-[11px] text-surface-300 font-semibold truncate" x-text="thread.carName"></p>
+                        <p class="text-[11px] text-surface-450 truncate mt-0.5" x-text="thread.lastMessageSnippet"></p>
                     </div>
-                </button>
+
+                    @* Hover Delete Button (Red, hover-visible) ── *@
+                    <button type="button"
+                            class="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-red-600 hover:bg-red-700 text-white rounded-md p-1.5 flex items-center justify-center shadow-glow-sm z-20"
+                            x-init="$el.setAttribute('hx-delete', '/Dashboard/DeleteConversation?id=' + thread.inquiryId); htmx.process($el)"
+                            hx-confirm="Delete this conversation?"
+                            hx-target="closest div"
+                            hx-swap="outerHTML swap:300ms"
+                            x-on:click.stop="">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                    </button>
+                </div>
             </template>
         </div>
     </div>
 
-    @* ── Right Pane: Active Chat Room ── *@
-    <div class="flex-1 flex flex-col bg-surface-900 border border-surface-800 rounded-2xl overflow-hidden relative">
+    @* ── Right Panel (70% Width): Conversation Screen ── *@
+    <div class="flex-1 lg:w-[70%] flex flex-col bg-surface-950 h-full overflow-hidden">
+        
+        @* Empty State *@
         <template x-if="!selectedThread">
-            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-surface-950/10">
-                <div class="w-16 h-16 bg-surface-900 border border-surface-800 rounded-2xl flex items-center justify-center mb-4">
-                    <svg class="w-8 h-8 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <div class="flex-grow flex flex-col items-center justify-center p-8 text-center bg-surface-950/30">
+                <div class="w-16 h-16 bg-surface-900 border border-surface-800 rounded-2xl flex items-center justify-center mb-5 shadow-card">
+                    <svg class="w-8 h-8 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
                     </svg>
                 </div>
-                <h3 class="text-lg font-display font-bold text-white mb-2">Your Inbox</h3>
-                <p class="text-sm text-surface-400 max-w-sm">Select an active conversation from the sidebar list to read messages and reply instantly in real-time.</p>
+                <h3 class="text-xl font-display font-black text-white mb-2">Inquiry Command Center</h3>
+                <p class="text-sm text-surface-400 max-w-sm leading-relaxed">Select an active dialogue queue thread from the panel list to review history and chat securely with dealer agents.</p>
             </div>
         </template>
 
+        @* Active Conversation *@
         <template x-if="selectedThread">
-            <div class="flex-1 flex flex-col overflow-hidden">
-                @* Chat Header *@
-                <div class="p-4 border-b border-surface-800 bg-surface-950/50 flex items-center justify-between gap-4">
+            <div class="flex-grow flex flex-col h-full overflow-hidden">
+                
+                @* ── Fixed Header (Dealer Info / Car Info) ── *@
+                <div class="flex-shrink-0 p-4 border-b border-surface-800 bg-surface-900/60 flex items-center justify-between gap-4 backdrop-blur-md">
                     <div class="flex items-center gap-3 min-w-0">
+                        @* Car Thumbnail Mini *@
                         <img :src="selectedThread.carImageUrl" 
-                             class="w-10 h-10 rounded-lg object-cover bg-surface-800 border border-surface-700/50 flex-shrink-0" 
-                             alt="" />
+                             class="w-11 h-11 rounded-lg object-cover bg-surface-800 border border-surface-700/50 flex-shrink-0" 
+                             alt="Car Profile" />
                         <div class="min-w-0">
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                                <span x-text="selectedThread.otherPartyName"></span>
-                                <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                <span class="truncate" x-text="selectedThread.otherPartyName"></span>
+                                <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded"
                                       x-text="selectedThread.otherPartyRole"
                                       x-bind:class="selectedThread.isSeller ? 'bg-accent-500/10 text-accent-400' : 'bg-primary-500/10 text-primary-400'">
                                 </span>
                             </h3>
-                            <p class="text-xs text-surface-400 truncate mt-0.5" x-text="selectedThread.carName"></p>
+                            <p class="text-xs text-primary-400 font-medium truncate mt-0.5" x-text="selectedThread.carName"></p>
                         </div>
                     </div>
 
-                    <a :href="'/Cars/Details/' + selectedThread.carId"
-                       class="btn-secondary py-1.5 px-3.5 text-xs flex items-center gap-1.5 flex-shrink-0">
-                        View Vehicle
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                        </svg>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <span class="hidden sm:inline-flex items-center gap-1.5 text-[10px] text-green-400 font-bold uppercase tracking-wider px-2 py-1 rounded bg-green-500/10 border border-green-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            Secure Link Active
+                        </span>
+                        <a :href="'/Cars/Details/' + selectedThread.carId"
+                           class="btn-outline text-xs px-4 py-2 hover:-translate-y-0.5 duration-200">
+                            View Showroom
+                        </a>
+                    </div>
                 </div>
 
-                @* Chat Body Messages Container *@
-                <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-surface-950/10" 
+                @* ── Middle Scrollable Messages Stream ── *@
+                <div class="flex-grow overflow-y-auto p-4 md:p-6 pt-2 md:pt-2 pb-2 md:pb-2 space-y-4 bg-surface-950/20 custom-scrollbar" 
                      x-ref="chatContainer">
                     
+                    @* Loader state *@
                     <template x-if="loading">
                         <div class="flex flex-col items-center justify-center h-full space-y-3">
                             <div class="w-8 h-8 rounded-full border-2 border-primary-500 border-t-transparent animate-spin"></div>
-                            <span class="text-xs text-surface-500 font-mono">Loading conversation...</span>
+                            <span class="text-xs text-surface-500 font-mono">Retrieving secure chat lines...</span>
                         </div>
                     </template>
-
+                    
+                    @* Stream content *@
                     <template x-if="!loading">
-                        <div class="space-y-4">
                             <template x-for="msg in messages" :key="msg.id">
-                                <div class="flex" :class="msg.isCurrentUser ? 'justify-end' : 'justify-start'">
-                                    <div class="max-w-[75%]">
-                                        @* Bubble *@
-                                        <div class="p-3.5 text-sm rounded-2xl shadow-sm whitespace-pre-wrap"
-                                             :class="msg.isCurrentUser 
-                                                     ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-tr-none' 
-                                                     : 'bg-surface-800 text-white rounded-tl-none border border-surface-700/50'">
-                                            <p x-text="msg.messageText"></p>
-                                        </div>
-                                        
-                                        @* Metadata *@
-                                        <div class="mt-1 flex items-center gap-2 text-[10px] text-surface-500 px-1"
-                                             :class="msg.isCurrentUser ? 'justify-end' : 'justify-start'">
-                                            <span class="font-bold" x-text="msg.isCurrentUser ? 'You' : msg.senderName"></span>
-                                            <span>•</span>
-                                            <span x-text="formatTime(msg.createdAt)"></span>
-                                        </div>
+                                <div class="flex flex-col mb-4" :class="msg.isCurrentUser ? 'items-end' : 'items-start'">
+                                    @* Message Bubble *@
+                                    <div class="px-4 py-2.5 text-sm rounded-2xl shadow-sm whitespace-pre-wrap leading-relaxed transition-all duration-200 w-fit max-w-[70%]"
+                                         :class="msg.isCurrentUser 
+                                                 ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-tr-none shadow-glow-sm' 
+                                                 : 'bg-surface-800 text-white rounded-tl-none border border-surface-700/50'"
+                                         x-text="msg.messageText">
+                                    </div>
+                                    
+                                    @* Metadata Info underneath *@
+                                    <div class="mt-1 flex items-center gap-1.5 text-[9px] text-surface-500 font-semibold tracking-wide whitespace-nowrap px-1">
+                                        <span class="text-surface-400 font-bold" x-text="msg.isCurrentUser ? 'You' : msg.senderName"></span>
+                                        <span>•</span>
+                                        <span x-text="formatTime(msg.createdAt)"></span>
                                     </div>
                                 </div>
                             </template>
-                        </div>
                     </template>
                 </div>
 
-                @* Chat Input Footer *@
-                <form class="p-4 border-t border-surface-800 bg-surface-950/50 flex items-center gap-3" 
-                      x-on:submit.prevent="sendMessage">
-                    <input type="text"
-                           x-model="newMessageText"
-                           placeholder="Type a professional message..."
-                           class="flex-1 bg-surface-900 border border-surface-800 rounded-xl px-4 py-3 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/50 transition-all duration-300" />
-                    
-                    <button type="submit"
-                            class="bg-primary-600 hover:bg-primary-500 text-white p-3 rounded-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:hover:bg-primary-600"
-                            :disabled="!newMessageText.trim()">
-                        <svg class="w-5 h-5 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0-7 7m7-7 7 7" />
-                        </svg>
-                    </button>
-                </form>
+                @* ── Fixed Bottom Input Board ── *@
+                <div class="flex-shrink-0 p-4 border-t border-surface-800 bg-surface-900/60 backdrop-blur-md">
+                    <form class="flex items-center gap-3" x-on:submit.prevent="sendMessage">
+                        <input type="text"
+                               x-model="newMessageText"
+                               placeholder="Type your message..."
+                               class="flex-1 bg-surface-850 border border-surface-800 rounded-xl px-4 py-3.5 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-300" />
+                        
+                        <button type="submit"
+                                class="bg-primary-600 hover:bg-primary-500 text-white p-3.5 rounded-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:hover:bg-primary-600 shadow-glow-sm"
+                                :disabled="!newMessageText.trim()">
+                            <svg class="w-5 h-5 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0-7 7m7-7 7 7" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </template>
     </div>
 </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('messengerConsole', () => ({
+            threads: @Json.Serialize(Model),
+            selectedThread: null,
+            messages: [],
+            newMessageText: '',
+            loading: false,
+            pollInterval: null,
+            activeTab: 'buyer',
+
+            async selectThread(thread) {
+                this.selectedThread = thread;
+                this.messages = [];
+                this.loading = true;
+                this.newMessageText = '';
+                
+                await this.fetchMessages();
+                this.loading = false;
+                this.scrollToBottom();
+
+                // SignalR presence tracking
+                if (window.notificationConnection) {
+                    try {
+                        await window.notificationConnection.invoke("JoinConversation", thread.inquiryId.toString());
+                    } catch (err) {
+                        console.error("Error joining conversation presence: ", err);
+                    }
+                }
+
+                // Setup real-time polling
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                this.pollInterval = setInterval(() => {
+                    this.fetchMessages(true);
+                }, 3000);
+            },
+
+            async fetchMessages(isSilent = false) {
+                if (!this.selectedThread) return;
+                try {
+                    let res = await fetch(`/Dashboard/GetChatHistory?inquiryId=${this.selectedThread.inquiryId}`);
+                    if (res.ok) {
+                        let data = await res.json();
+                        
+                        // If silent poll, only update if count changed or last message text/id is different
+                        if (isSilent) {
+                            if (data.length !== this.messages.length || (data.length > 0 && data[data.length-1].id !== this.messages[this.messages.length-1].id)) {
+                                this.messages = data;
+                                this.scrollToBottom();
+                            }
+                        } else {
+                            this.messages = data;
+                            this.scrollToBottom();
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error fetching chat history:', err);
+                }
+            },
+
+            async sendMessage() {
+                if (!this.newMessageText.trim() || !this.selectedThread) return;
+                
+                let text = this.newMessageText;
+                this.newMessageText = ''; // Clear early for instant feel
+
+                try {
+                    let res = await fetch('/Dashboard/SendChatMessage', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]')?.value || ''
+                        },
+                        body: JSON.stringify({
+                            inquiryId: this.selectedThread.inquiryId,
+                            messageText: text
+                        })
+                    });
+
+                    if (res.ok) {
+                        let newMsg = await res.json();
+                        this.messages.push(newMsg);
+                        this.scrollToBottom();
+
+                        // Update the snippet in the sidebar thread list instantly
+                        let t = this.threads.find(x => x.inquiryId === this.selectedThread.inquiryId);
+                        if (t) {
+                            t.lastMessageSnippet = text.length > 40 ? text.substring(0, 37) + '...' : text;
+                            t.lastMessageTime = new Date().toISOString();
+                        }
+                    } else {
+                        alert('Failed to send message.');
+                    }
+                } catch (err) {
+                    console.error('Error sending message:', err);
+                    alert('Error sending message.');
+                }
+            },
+
+            scrollToBottom() {
+                this.$nextTick(() => {
+                    let chatContainer = this.$refs.chatContainer;
+                    if (chatContainer) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                });
+            },
+
+            formatTime(isoString) {
+                if (!isoString) return '';
+                let d = new Date(isoString);
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' • ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            },
+
+            switchTab(tab) {
+                this.activeTab = tab;
+                // Select the first thread in the newly selected tab
+                let tabThreads = this.threads.filter(t => t.isSeller === (tab === 'seller'));
+                if (tabThreads.length > 0) {
+                    this.selectThread(tabThreads[0]);
+                } else {
+                    this.selectedThread = null;
+                    this.messages = [];
+                    if (this.pollInterval) {
+                        clearInterval(this.pollInterval);
+                        this.pollInterval = null;
+                    }
+                    if (window.notificationConnection) {
+                        window.notificationConnection.invoke("LeaveConversation").catch(err => console.error(err));
+                    }
+                }
+            },
+
+             init() {
+                 let urlParams = new URLSearchParams(window.location.search);
+                 let tabParam = urlParams.get('tab');
+                 let carIdParam = urlParams.get('carId') || urlParams.get('listingId');
+                 let inquiryIdParam = urlParams.get('inquiryId');
+ 
+                 // Determine initial active tab based on query param or thread presence
+                 if (tabParam === 'seller') {
+                     this.activeTab = 'seller';
+                 } else if (tabParam === 'buyer') {
+                     this.activeTab = 'buyer';
+                 } else {
+                     let hasBuyer = this.threads.some(t => !t.isSeller);
+                     let hasSeller = this.threads.some(t => t.isSeller);
+                     if (!hasBuyer && hasSeller) {
+                         this.activeTab = 'seller';
+                     } else {
+                         this.activeTab = 'buyer';
+                     }
+                 }
+ 
+                 // Select specific thread if requested, otherwise select the first thread of the active tab
+                 let initialThread = null;
+                 if (inquiryIdParam) {
+                     initialThread = this.threads.find(t => String(t.inquiryId).toLowerCase() === inquiryIdParam.toLowerCase());
+                 }
+                 if (!initialThread && carIdParam) {
+                     initialThread = this.threads.find(t => String(t.carId).toLowerCase() === carIdParam.toLowerCase() && t.isSeller === (this.activeTab === 'seller'));
+                 }
+                 if (!initialThread) {
+                     initialThread = this.threads.find(t => t.isSeller === (this.activeTab === 'seller'));
+                 }
+ 
+                 if (initialThread) {
+                     this.selectThread(initialThread);
+                 }
+             },
+
+            destroy() {
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                if (window.notificationConnection) {
+                    window.notificationConnection.invoke("LeaveConversation").catch(err => console.error(err));
+                }
+            }
+        }));
+    });
+</script>

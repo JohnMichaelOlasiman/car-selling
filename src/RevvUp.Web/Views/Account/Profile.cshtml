@@ -1,214 +1,375 @@
 @* ============================================================
    RevvUp — Profile Page
-   Edit user profile with elegant form
+   Edit user profile with elegant form in a same-height 2-column layout
    ============================================================ *@
 @model RevvUp.Web.Models.ProfileViewModel
 @{
     ViewData["Title"] = "My Profile";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewData["FitToScreen"] = true;
+    ViewData["UseCompactFooter"] = true;
 }
 
-@* ── Success Toast ── *@
-@if (TempData["SuccessMessage"] != null)
-{
-    <div x-data="{ show: true }"
-         x-show="show"
-         x-init="setTimeout(() => show = false, 4000)"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 translate-y-2"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed top-24 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl
-                bg-green-500/20 border border-green-500/30 text-green-400 shadow-elevated backdrop-blur-xl">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <span class="text-sm font-medium">@TempData["SuccessMessage"]</span>
-    </div>
-}
+<style>
+    /* 1. Rigid container height relative to the viewport */
+    .profile-container {
+        height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 180px) !important;
+        min-height: 450px !important;
+        overflow: hidden !important;
+    }
+    @@media (min-width: 1024px) {
+        .profile-container {
+            height: calc(100vh - 145px) !important;
+            max-height: calc(100vh - 145px) !important;
+        }
+    }
 
-<div class="animate-fade-in-up">
+    /* 2. Visible scrollbar rules for panels */
+    .custom-scrollbar {
+        overflow-y: auto !important;
+        scrollbar-width: thin !important; /* Firefox compatibility */
+        scrollbar-color: rgba(59, 130, 246, 0.45) rgba(15, 23, 42, 0.15) !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+        display: block !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.2) !important;
+        border-radius: 9999px !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.45) !important;
+        border-radius: 9999px !important;
+        border: 2px solid rgba(10, 14, 20, 0.8) !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.75) !important;
+    }
+</style>
+
+<div class="py-2 animate-fade-in-up flex-grow flex flex-col profile-container overflow-hidden">
     @* ── Header ── *@
-    <div class="mb-8">
-        <h1 class="text-3xl font-display font-bold text-white mb-2">My Profile</h1>
-        <p class="text-surface-400">Customize your RevvUp identity</p>
+    <div class="mb-4 flex-shrink-0">
+        <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-1">Identity Settings</span>
+        <h1 class="text-3xl font-display font-black text-white mb-1">My Profile</h1>
+        <p class="text-surface-400 text-xs sm:text-sm">Customize your RevvUp identity and account preferences.</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        @* ── Profile Card (Left) ── *@
-        <div class="lg:col-span-1">
-            <div class="card p-6 text-center">
-                @* ── Avatar ── *@
-                <div class="relative inline-block mb-4 group cursor-pointer"
-                     x-data="{ 
-                         avatarUrl: '@Model.AvatarUrl',
-                         displayName: '@Model.DisplayName',
-                         uploadAvatar(event) {
-                             const file = event.target.files[0];
-                             if (!file) return;
-                             
-                             const formData = new FormData();
-                             formData.append('avatarFile', file);
-                             
-                             fetch('/Account/UploadAvatar', {
-                                 method: 'POST',
-                                 body: formData,
-                                 headers: {
-                                     'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]').value
+    @* ── 2-Column Equal Height Layout ── *@
+    <div class="flex flex-col lg:flex-row items-stretch gap-6 flex-grow min-h-0 lg:overflow-hidden mb-6">
+        
+        @* ── Profile Card (Left Column - 1/3 width) ── *@
+        <div class="w-full lg:w-1/3 flex flex-col">
+            <div class="w-full h-full card-glass p-8 flex flex-col justify-between items-center text-center border border-surface-800/60 shadow-elevated">
+                <div class="w-full flex flex-col items-center">
+                    @* ── Avatar with hover edit overlay ── *@
+                    <div class="relative inline-block mb-5 group cursor-pointer"
+                         x-data="{ 
+                             avatarUrl: '@Model.AvatarUrl',
+                             displayName: '@Model.DisplayName',
+                             uploadAvatar(event) {
+                                 const file = event.target.files[0];
+                                 if (!file) return;
+                                 
+                                 // Validate image size (max 20MB)
+                                 const maxSize = 20 * 1024 * 1024;
+                                 if (file.size > maxSize) {
+                                     alert('Upload failed: Image must be under 20MB.');
+                                     return;
                                  }
-                             })
-                             .then(response => {
-                                 if (response.ok) return response.json();
-                                 return response.text().then(text => { throw new Error(text) });
-                             })
-                             .then(data => {
-                                 this.avatarUrl = data.avatarUrl;
-                                 window.location.reload();
-                             })
-                             .catch(error => {
-                                 alert('Upload failed: ' + error.message);
-                             });
-                         },
-                         deleteAvatar() {
-                             if (!confirm('Are you sure you want to delete your profile picture?')) return;
-                             
-                             fetch('/Account/DeleteAvatar', {
-                                 method: 'POST',
-                                 headers: {
-                                     'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]').value
-                                 }
-                             })
-                             .then(response => {
-                                 if (response.ok) {
-                                     this.avatarUrl = '';
-                                     window.location.reload();
-                                 } else {
-                                     alert('Delete failed.');
-                                 }
-                             });
-                         }
-                     }">
-                    
-                    <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/jpg" class="hidden" x-on:change="uploadAvatar" />
-                    
-                    <div x-on:click="document.getElementById('avatarFileInput').click()"
-                         class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-800 bg-surface-900 shadow-glow-sm flex items-center justify-center relative">
-                        
-                        <template x-if="avatarUrl">
-                            <img :src="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
-                        </template>
-                        
-                        <template x-if="!avatarUrl">
-                            <div class="w-full h-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-3xl font-display font-bold text-white">
-                                @(Model.DisplayName.Length > 0 ? Model.DisplayName[0].ToString().ToUpper() : "R")
-                            </div>
-                        </template>
 
-                        <!-- Hover overlay -->
-                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white text-[10px] font-semibold">
-                            <svg class="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                 // Validate file type
+                                 const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                                 const fileType = file.type;
+                                 const fileName = file.name.toLowerCase();
+                                 const isValidType = allowedExtensions.includes(fileType) || 
+                                                     fileName.endsWith('.jpg') || 
+                                                     fileName.endsWith('.jpeg') || 
+                                                     fileName.endsWith('.png');
+                                 if (!isValidType) {
+                                     alert('Upload failed: Only JPG, JPEG, and PNG images are allowed.');
+                                     return;
+                                 }
+
+                                 const formData = new FormData();
+                                 formData.append('avatarFile', file);
+                                 
+                                 fetch('/Account/UploadAvatar', {
+                                     method: 'POST',
+                                     body: formData,
+                                     headers: {
+                                         'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]').value
+                                     }
+                                 })
+                                 .then(response => {
+                                     if (response.ok) return response.json();
+                                     return response.text().then(text => { throw new Error(text) });
+                                 })
+                                 .then(data => {
+                                     this.avatarUrl = data.avatarUrl;
+                                     window.location.reload();
+                                 })
+                                 .catch(error => {
+                                     alert('Upload failed: ' + error.message);
+                                 });
+                             },
+                             deleteAvatar() {
+                                 fetch('/Account/DeleteAvatar', {
+                                     method: 'POST',
+                                     headers: {
+                                         'RequestVerificationToken': document.querySelector('input[name=__RequestVerificationToken]').value
+                                     }
+                                 })
+                                 .then(response => {
+                                     if (response.ok) {
+                                         this.avatarUrl = '';
+                                         window.location.reload();
+                                     } else {
+                                         alert('Delete failed.');
+                                     }
+                                 });
+                             }
+                         }">
+                        
+                        <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/jpg" class="hidden" x-on:change="uploadAvatar" />
+                        
+                        <div x-on:click="document.getElementById('avatarFileInput').click()"
+                             class="w-28 h-28 rounded-full overflow-hidden border-4 border-surface-800 bg-surface-950 shadow-glow-sm flex items-center justify-center relative transition-transform duration-350 hover:scale-105">
+                            
+                            <template x-if="avatarUrl">
+                                <img :src="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                            </template>
+                            
+                            <template x-if="!avatarUrl">
+                                <div class="w-full h-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-4xl font-display font-bold text-white">
+                                    @(Model.DisplayName.Length > 0 ? Model.DisplayName[0].ToString().ToUpper() : "R")
+                                </div>
+                            </template>
+
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white text-[11px] font-bold">
+                                <svg class="w-6 h-6 mb-1 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                </svg>
+                                Change Photo
+                            </div>
+                        </div>
+
+                        <!-- Active indicator -->
+                        <div class="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-green-500 border-2 border-surface-900 flex items-center justify-center shadow-glow-sm pointer-events-none animate-pulse">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                             </svg>
-                            Update Photo
                         </div>
                     </div>
 
-                    <!-- Active Indicator Dot -->
-                    <div class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-green-500 border-2 border-surface-900 flex items-center justify-center shadow-glow-sm pointer-events-none">
-                        <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
+                    @* Remove photo button *@
+                    <div x-show="avatarUrl != null && avatarUrl != ''" class="mb-4" x-cloak>
+                        <button type="button" x-on:click="$dispatch('confirm-action', { message: 'Are you sure you want to remove your profile photo?', action: () => deleteAvatar() })"
+                                class="text-[10px] font-extrabold text-red-400 hover:text-white hover:bg-red-500/20 transition-all duration-300 flex items-center gap-1.5 py-1.5 px-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            Remove Photo
+                        </button>
+                    </div>
+
+                    <h3 class="text-2xl font-display font-black text-white mb-1">@Model.DisplayName</h3>
+                    <p class="text-surface-400 text-sm mb-4">@Model.Email</p>
+
+                    <span class="badge-primary mb-6">Buyer Control Desk</span>
+
+                    <div class="divider mb-6"></div>
+
+                    @* Buyer summary statistics grid *@
+                    <div class="grid grid-cols-2 gap-4 w-full">
+                        <div class="p-4 rounded-xl bg-surface-950/40 border border-surface-850">
+                            <div class="text-3xl font-display font-black text-white">@(ViewBag.FavoritesCount ?? 0)</div>
+                            <div class="text-[10px] text-surface-500 font-extrabold uppercase tracking-wider mt-1">Saved Cars</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-surface-950/40 border border-surface-850">
+                            <div class="text-3xl font-display font-black text-white">@(ViewBag.InquiriesCount ?? 0)</div>
+                            <div class="text-[10px] text-surface-500 font-extrabold uppercase tracking-wider mt-1">Inquiries</div>
+                        </div>
+                    </div>
+
+                    @* ── Seller Listing Stats Grid ── *@
+                    <div class="grid grid-cols-3 gap-3 w-full mt-4 pt-4 border-t border-surface-800/60">
+                        <div class="p-3 rounded-xl bg-green-500/5 border border-green-500/15 text-center">
+                            <div class="text-2xl font-display font-black text-white">@Model.ActiveListings</div>
+                            <div class="text-[9px] text-green-400 font-extrabold uppercase tracking-wider mt-1">Active</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-accent-500/5 border border-accent-500/15 text-center">
+                            <div class="text-2xl font-display font-black text-white">@Model.SoldListings</div>
+                            <div class="text-[9px] text-accent-400 font-extrabold uppercase tracking-wider mt-1">Sold</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-primary-500/5 border border-primary-500/15 text-center">
+                            <div class="text-2xl font-display font-black text-white">@Model.TotalListings</div>
+                            <div class="text-[9px] text-primary-400 font-extrabold uppercase tracking-wider mt-1">Total Listed</div>
+                        </div>
                     </div>
                 </div>
 
-                <div x-show="Model.AvatarUrl != null && Model.AvatarUrl != ''" class="mb-4" x-cloak>
-                    <button type="button" onclick="document.getElementById('avatarFileInput').dispatchEvent(new CustomEvent('delete-avatar-trigger'))"
-                            x-on:click="deleteAvatar"
-                            class="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors flex items-center justify-center gap-1.5 mx-auto py-1 px-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                        </svg>
-                        Remove Photo
-                    </button>
+                <div class="w-full mt-6">
+                    <div class="divider mb-4"></div>
+                    <p class="text-[11px] text-surface-500 font-medium">
+                        Securely active member since @Model.JoinedAt.ToString("MMMM yyyy")
+                    </p>
                 </div>
-
-                <h3 class="text-xl font-display font-bold text-white mb-1">@Model.DisplayName</h3>
-                <p class="text-surface-400 text-sm mb-4">@Model.Email</p>
-
-                <span class="badge-primary mb-4">Buyer Profile</span>
-
-                <div class="divider my-4"></div>
-
-                @* ── Stats ── *@
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center">
-                        <div class="text-2xl font-display font-bold text-white">@(ViewBag.FavoritesCount ?? 0)</div>
-                        <div class="text-xs text-surface-500">Saved Vehicles</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-display font-bold text-white">@(ViewBag.InquiriesCount ?? 0)</div>
-                        <div class="text-xs text-surface-500">Inquiries Sent</div>
-                    </div>
-                </div>
-
-                <div class="divider my-4"></div>
-                <p class="text-xs text-surface-500">
-                    Member since @Model.JoinedAt.ToString("MMMM yyyy")
-                </p>
             </div>
         </div>
 
-        @* ── Edit Form (Right) ── *@
-        <div class="lg:col-span-2">
-            <div class="card p-8">
-                <h3 class="text-lg font-display font-bold text-white mb-6 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+        @* ── Edit Profile Form (Right Column - 2/3 width) ── *@
+        <div class="w-full lg:w-2/3 flex flex-col lg:overflow-y-auto pr-1 custom-scrollbar space-y-6 pb-6">
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div id="profile-success-alert" class="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-300 flex items-center gap-3 animate-fade-in">
+                    <svg class="w-5 h-5 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
                     </svg>
-                    Edit Profile
-                </h3>
+                    <span class="text-sm font-semibold">@TempData["SuccessMessage"]</span>
+                </div>
+                <script>setTimeout(() => { const a = document.getElementById('profile-success-alert'); if (a) a.style.display = 'none'; }, 4000);</script>
+            }
 
-                <form asp-action="Profile" method="post" x-data="{ loading: false }" x-on:submit="loading = true">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                        <div>
-                            <label class="block text-sm font-medium text-surface-300 mb-2">Display Name</label>
-                            <input asp-for="DisplayName" class="input" />
-                            <span asp-validation-for="DisplayName" class="text-red-400 text-xs mt-1"></span>
+            <form asp-action="Profile" method="post" x-data="{ loading: false }" x-on:submit="loading = true" class="space-y-6">
+                @Html.AntiForgeryToken()
+                
+                @* ── CARD 1: Buyer/General Profile Details ── *@
+                <div class="w-full card-glass p-8 flex flex-col justify-between border border-surface-800/60 shadow-elevated bg-surface-900/60">
+                    <div>
+                        <h3 class="text-2xl font-display font-black text-white mb-6 flex items-center gap-2.5">
+                            <svg class="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                            Edit Profile Details
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Display Name</label>
+                                <input asp-for="DisplayName" 
+                                       class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-500 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" />
+                                <span asp-validation-for="DisplayName" class="text-red-400 text-xs mt-1 block"></span>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Email Address</label>
+                                <input asp-for="Email" 
+                                       class="w-full px-4 py-3.5 rounded-xl bg-surface-900 border border-surface-800 text-white opacity-50 cursor-not-allowed focus:outline-none" 
+                                       readonly />
+                            </div>
                         </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Location</label>
+                                <input asp-for="Location" 
+                                       class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" 
+                                       placeholder="Metro Manila, PH" />
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Phone Number</label>
+                                <input asp-for="PhoneNumber" 
+                                       class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" 
+                                       placeholder="+63 912 345 6789" />
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-sm font-medium text-surface-300 mb-2">Email</label>
-                            <input asp-for="Email" class="input opacity-60 cursor-not-allowed" readonly />
+                            <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Personal Biography</label>
+                            <textarea asp-for="Bio" rows="4" 
+                                      class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 resize-none"
+                                      placeholder="Write a short description about yourself or your dream garage..."></textarea>
+                            <span asp-validation-for="Bio" class="text-red-400 text-xs mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                @* ── CARD 2: Seller Profile details ── *@
+                <div class="w-full card-glass p-8 flex flex-col justify-between border border-surface-800/60 shadow-elevated bg-surface-900/60">
+                    <div>
+                        <h3 class="text-2xl font-display font-black text-white mb-6 flex items-center gap-2.5">
+                            <svg class="w-6 h-6 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-9 0v-7.5A.75.75 0 0 1 6 12.75h3a.75.75 0 0 1 .75.75V21m-4.5-9.75V9A3 3 0 0 0 3 6h18a3 3 0 0 0-3-3v3" />
+                            </svg>
+                            Seller Credentials & Stats
+                        </h3>
+
+                        @* ── Seller Statistics Row ── *@
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div class="p-4 rounded-xl bg-surface-950/40 border border-surface-800 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-accent-500/10 flex items-center justify-center border border-accent-500/20">
+                                    <svg class="w-5 h-5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008ZM16.5 15h.008v.008H16.5V15Zm0 2.25h.008v.008H16.5v-.008Z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-surface-550 font-extrabold uppercase tracking-wider">Member Since</div>
+                                    <div class="text-sm font-bold text-white mt-0.5">@Model.JoinedAt.ToString("MMMM dd, yyyy")</div>
+                                </div>
+                            </div>
+                            <div class="p-4 rounded-xl bg-surface-950/40 border border-surface-800 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
+                                    <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-surface-550 font-extrabold uppercase tracking-wider">Active Listings</div>
+                                    <div class="text-sm font-bold text-white mt-0.5">@Model.SellerListingsCount active cars</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Seller Display Name</label>
+                                <input asp-for="SellerDisplayName" 
+                                       class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" 
+                                       placeholder="e.g. RevvUp Elite Motors" />
+                                <span asp-validation-for="SellerDisplayName" class="text-red-400 text-xs mt-1 block"></span>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Seller Contact Number</label>
+                                <input asp-for="SellerPhoneNumber" 
+                                       class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" 
+                                       placeholder="e.g. +63 912 345 6789" />
+                                <span asp-validation-for="SellerPhoneNumber" class="text-red-400 text-xs mt-1 block"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Seller Location / Address</label>
+                            <input asp-for="SellerLocation" 
+                                   class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20" 
+                                   placeholder="e.g. Quezon City, Metro Manila" />
+                            <span asp-validation-for="SellerLocation" class="text-red-400 text-xs mt-1 block"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-2.5">Seller Bio / Description</label>
+                            <textarea asp-for="SellerBio" rows="3" 
+                                      class="w-full px-4 py-3.5 rounded-xl bg-surface-850 border border-surface-800 text-white placeholder-surface-550 transition-all duration-300 focus:outline-none focus:bg-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 resize-none"
+                                      placeholder="Introduce your dealership or selling credentials..."></textarea>
+                            <span asp-validation-for="SellerBio" class="text-red-400 text-xs mt-1 block"></span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                        <div>
-                            <label class="block text-sm font-medium text-surface-300 mb-2">Location</label>
-                            <input asp-for="Location" class="input" placeholder="Metro Manila" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-300 mb-2">Phone</label>
-                            <input asp-for="PhoneNumber" class="input" placeholder="+63 912 345 6789" />
-                        </div>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-surface-300 mb-2">Bio</label>
-                        <textarea asp-for="Bio" rows="3" class="input resize-none"
-                                  placeholder="Tell the world about your love for cars..."></textarea>
-                        <span asp-validation-for="Bio" class="text-red-400 text-xs mt-1"></span>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-3">
-                        <a asp-controller="Dashboard" asp-action="Index" class="btn-ghost">Cancel</a>
-                        <button type="submit" class="btn-primary group" x-bind:disabled="loading">
+                    <div class="flex items-center justify-end gap-4 pt-6 border-t border-surface-800/60 mt-8">
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn-ghost text-xs">Cancel</a>
+                        <button type="submit" class="btn-primary btn-sm px-6 py-2.5 group" x-bind:disabled="loading">
                             <template x-if="!loading">
                                 <span class="flex items-center gap-2">
-                                    Save Changes
-                                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    Save All Changes
+                                    <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                     </svg>
                                 </span>
@@ -218,13 +379,15 @@
                                     <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="30 70" />
                                     </svg>
-                                    Saving...
+                                    Saving Details...
                                 </span>
                             </template>
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+
+            </form>
         </div>
+
     </div>
 </div>

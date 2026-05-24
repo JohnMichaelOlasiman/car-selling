@@ -10,6 +10,26 @@
     {
         currentUser = await UserManager.GetUserAsync(User);
     }
+    
+    string currentPath = Context.Request.Path.Value ?? "/";
+    bool isHomeActive = currentPath == "/" || currentPath.Equals("/Home", StringComparison.OrdinalIgnoreCase) || currentPath.Equals("/Home/Index", StringComparison.OrdinalIgnoreCase);
+    bool isBrowseActive = currentPath.StartsWith("/Cars", StringComparison.OrdinalIgnoreCase)
+                       && !currentPath.StartsWith("/Cars/Compare", StringComparison.OrdinalIgnoreCase);
+    bool isAboutActive = currentPath.StartsWith("/Home/About", StringComparison.OrdinalIgnoreCase);
+    bool isLoginActive = currentPath.StartsWith("/Account/Login", StringComparison.OrdinalIgnoreCase);
+    bool isRegisterActive = currentPath.StartsWith("/Account/Register", StringComparison.OrdinalIgnoreCase);
+
+    var homeMobileClass = isHomeActive
+        ? "block px-4 py-3 rounded-xl text-white font-medium bg-white/5 transition-all duration-300 hover:bg-white/10 hover:pl-6"
+        : "block px-4 py-3 rounded-xl text-surface-300 font-medium transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6";
+
+    var browseMobileClass = isBrowseActive
+        ? "block px-4 py-3 rounded-xl text-white font-medium bg-white/5 transition-all duration-300 hover:bg-white/10 hover:pl-6"
+        : "block px-4 py-3 rounded-xl text-surface-300 font-medium transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6";
+
+    var aboutMobileClass = isAboutActive
+        ? "block px-4 py-3 rounded-xl text-white font-medium bg-white/5 transition-all duration-300 hover:bg-white/10 hover:pl-6"
+        : "block px-4 py-3 rounded-xl text-surface-300 font-medium transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6";
 }
 <!DOCTYPE html>
 <html lang="en" class="dark">
@@ -26,16 +46,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
     <!-- Tailwind CSS (compiled output) -->
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- SignalR client library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 
     <!-- Alpine.js — lightweight reactivity -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- HTMX — HTML over the wire -->
-    <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwvvUDxLNsIJMxPqntJtGJSVCshbEDdFmeU3tPqalSDlXGYxN5K" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
 </head>
 
-<body class="min-h-screen flex flex-col overflow-x-hidden bg-surface-950 text-surface-200"
+<body class="@(ViewData["FitToScreen"] as bool? == true ? "lg:h-screen lg:overflow-hidden min-h-screen overflow-x-hidden" : "min-h-screen overflow-x-hidden") flex flex-col bg-surface-950 text-surface-200"
       x-data="{ mobileMenuOpen: false, compareCount: 0, compareLink: '/Cars/Compare', favoritesCount: 0, updateCompare() { const ids = JSON.parse(localStorage.getItem('compareCars') || '[]'); this.compareCount = ids.length; this.compareLink = ids.length > 0 ? '/Cars/Compare?ids=' + ids.join(',') : '/Cars/Compare'; }, updateFavorites() { this.favoritesCount = JSON.parse(localStorage.getItem('likedCars') || '[]').length; } }"
       x-init="updateCompare(); updateFavorites(); window.addEventListener('storage', () => { updateCompare(); updateFavorites(); }); setInterval(() => { updateCompare(); updateFavorites(); }, 1000);"
       x-on:keydown.escape="mobileMenuOpen = false">
@@ -63,7 +86,7 @@
                 ? 'bg-surface-950/90 backdrop-blur-xl border-b border-surface-800/50 shadow-elevated'
                 : 'bg-transparent'">
 
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="premium-container">
             <div class="flex items-center justify-between h-18">
 
                 @* ── Logo ── *@
@@ -86,11 +109,10 @@
                 </a>
 
                 @* ── Desktop Navigation ── *@
-                <div class="hidden md:flex items-center gap-1" id="nav-desktop-menu">
-                    <a href="/" class="nav-link">Home</a>
-                    <a href="/Cars/Browse" class="nav-link">Browse Cars</a>
-                    <a href="#how-it-works" class="nav-link">How It Works</a>
-                    <a href="#" class="nav-link">About</a>
+                <div class="hidden md:flex items-center gap-5" id="nav-desktop-menu">
+                    <a href="/" class="nav-link font-bold text-[17px] tracking-wide @(isHomeActive ? "nav-link-active" : "")">Home</a>
+                    <a href="/Cars/Browse" class="nav-link font-bold text-[17px] tracking-wide @(isBrowseActive ? "nav-link-active" : "")">Browse Cars</a>
+                    <a href="/Home/About" class="nav-link font-bold text-[17px] tracking-wide @(isAboutActive ? "nav-link-active" : "")">About</a>
                 </div>
 
                 @* ── Desktop Actions ── *@
@@ -108,53 +130,54 @@
 
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        @* ── Favorites Button ── *@
-                        <a asp-controller="Dashboard" asp-action="SavedCars"
-                           class="btn-ghost btn-sm relative">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                            </svg>
-                            <span x-show="favoritesCount > 0" x-text="favoritesCount"
-                                  class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary-500 text-white text-[10px] font-bold flex items-center justify-center"></span>
-                        </a>
-
                         @* ── Notifications Dropdown ── *@
-                        <div class="relative" x-data="{ notificationsOpen: false, notifications: [
-                            { id: 1, title: 'Welcome to RevvUp!', body: 'Post your first listing today and start selling.' },
-                            { id: 2, title: 'Access Granted', body: 'You are now an authorized member in the community.' }
-                        ] }" x-on:click.away="notificationsOpen = false">
-                            <button x-on:click="notificationsOpen = !notificationsOpen"
+                        <div class="relative" x-data="notifDropdown()" x-init="init()" x-on:click.away="open = false">
+                            <button x-on:click="toggle()"
                                     class="btn-ghost btn-sm relative"
                                     title="Notifications">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a9.04 9.04 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5M21 12a9 9 0 1 1-18 0c0-1.79.482-3.47 1.328-4.921M21 12H3m0 0a9 9 0 0 1 9-9" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a9.04 9.04 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M10.5 8.625a3 3 0 1 1 3 0M19.5 12a7.5 7.5 0 0 0-15 0c0 1.972-.573 3.812-1.563 5.378m18.126-5.378A8.967 8.967 0 0 1 21 18H3m0 0a8.967 8.967 0 0 0 1.563-5.378m18.126 5.378A8.967 8.967 0 0 0 21 12" />
                                 </svg>
-                                <span x-show="notifications.length > 0" x-text="notifications.length"
+                                <span x-show="unreadCount > 0" x-text="unreadCount"
                                       class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-accent-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse"></span>
                             </button>
 
                             @* Dropdown Panel *@
-                            <div x-show="notificationsOpen" x-cloak
+                            <div x-show="open" x-cloak
                                  x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                                  x-transition:leave="transition ease-in duration-150"
                                  x-transition:leave-start="opacity-100 scale-100"
                                  x-transition:leave-end="opacity-0 scale-95"
-                                 class="absolute right-0 mt-2 w-80 bg-surface-900 border border-surface-800 rounded-2xl shadow-elevated p-3 z-50 space-y-2">
-                                <div class="flex items-center justify-between px-2 pb-2 border-b border-surface-800/80">
+                                 class="absolute right-0 mt-2 w-96 min-w-[380px] bg-surface-900 border border-surface-800 rounded-2xl shadow-elevated p-4 z-50">
+                                <div class="flex items-center justify-between px-4 py-3 border-b border-surface-800/80">
                                     <h4 class="text-sm font-semibold text-white">Notifications</h4>
-                                    <button x-on:click="notifications = []" class="text-xs text-primary-400 hover:underline">Clear all</button>
+                                    <button x-on:click="markAllRead()" 
+                                            x-show="unreadCount > 0"
+                                            class="text-xs text-primary-400 hover:text-primary-300 font-semibold transition-colors whitespace-nowrap">
+                                        Mark all as read
+                                    </button>
                                 </div>
-                                <div class="max-h-60 overflow-y-auto space-y-2 pr-1">
-                                    <template x-for="item in notifications" :key="item.id">
-                                        <div class="p-2.5 rounded-xl bg-surface-950/50 hover:bg-white/5 transition-colors border border-surface-800/40">
-                                            <p class="text-xs font-semibold text-white" x-text="item.title"></p>
-                                            <p class="text-[10px] text-surface-400 mt-1" x-text="item.body"></p>
-                                        </div>
+                                <div class="max-h-[400px] overflow-y-auto space-y-1.5 pr-1 mt-2 custom-scrollbar">
+                                    <template x-for="notif in notifications" :key="notif.id">
+                                        <a :href="notif.link"
+                                           x-on:click="markRead(notif.id)"
+                                           class="block px-4 py-4 rounded-xl transition-colors border relative cursor-pointer"
+                                           x-bind:class="notif.isRead 
+                                                         ? 'bg-surface-950/20 border-surface-850/40 opacity-60 hover:bg-surface-950/40' 
+                                                         : 'bg-surface-950/60 border-primary-500/20 shadow-glow-sm hover:bg-surface-950/80'">
+                                            <div class="flex items-start gap-3">
+                                                <span class="mt-1.5 w-2 h-2 rounded-full shrink-0"
+                                                      x-bind:class="notif.isRead ? 'bg-transparent' : 'bg-primary-500 animate-pulse'"></span>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm text-gray-200 leading-snug" x-text="notif.message"></p>
+                                                    <p class="text-xs text-surface-500 mt-1" x-text="timeAgo(notif.createdAt)"></p>
+                                                </div>
+                                            </div>
+                                        </a>
                                     </template>
-                                    <div x-show="notifications.length === 0" class="text-center py-6 text-xs text-surface-500 italic">
+                                    <div x-show="notifications.length === 0" class="text-center py-8 text-sm text-surface-500 italic">
                                         All caught up!
                                     </div>
                                 </div>
@@ -251,10 +274,30 @@
                                     Profile
                                 </a>
 
+                                @* ── Seller Section ── *@
+                                <p class="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-surface-600 uppercase tracking-widest">Sell</p>
+                                <a asp-controller="Seller" asp-action="MyListings"
+                                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-surface-300
+                                          hover:text-white hover:bg-white/5 transition-all duration-300">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                                    </svg>
+                                    My Listings
+                                </a>
+                                <a asp-controller="Seller" asp-action="Create"
+                                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-primary-400
+                                          hover:text-primary-300 hover:bg-primary-500/10 transition-all duration-300">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                    Post a Car
+                                </a>
+
                                 <div class="h-px bg-surface-700/50 mx-2 my-1"></div>
 
-                                <form asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit"
+                                <form asp-controller="Account" asp-action="Logout" method="post" id="logout-desktop-form">
+                                    <button type="button"
+                                            @@click="$dispatch('confirm-action', { message: 'Are you sure you want to sign out?', action: () => { document.getElementById('logout-desktop-form').submit(); } })"
                                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full
                                                    text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -268,13 +311,17 @@
                     }
                     else
                     {
-                        <button class="btn-ghost btn-sm">
+                        <a href="/Account/Register" 
+                           class="@(isRegisterActive ? "btn-ghost btn-sm text-pink-500 bg-pink-500/10 border border-pink-500/20" : "btn-ghost btn-sm")"
+                           title="Join Free / Save to Favorites">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                             </svg>
-                        </button>
-                        <a asp-controller="Account" asp-action="Login" class="btn-primary btn-sm" id="nav-signin-btn">
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" 
+                           class="@(isLoginActive ? "btn-primary btn-sm" : (isRegisterActive ? "btn-outline btn-sm" : "btn-primary btn-sm"))" 
+                           id="nav-signin-btn">
                             Sign In
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -315,12 +362,10 @@
 
             <div class="bg-surface-950/98 backdrop-blur-2xl border-t border-surface-800/50 px-4 pb-6 pt-2">
                 <div class="space-y-1">
-                    <a href="/" class="block px-4 py-3 rounded-xl text-white font-medium bg-white/5
-                                      transition-all duration-300 hover:bg-white/10 hover:pl-6">
+                    <a href="/" class="@homeMobileClass">
                         Home
                     </a>
-                    <a href="/Cars/Browse" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
-                                      transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
+                    <a href="/Cars/Browse" class="@browseMobileClass">
                         Browse Cars
                     </a>
                     <a x-bind:href="compareLink" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
@@ -328,16 +373,7 @@
                         <span>Compare Vehicles</span>
                         <span x-show="compareCount > 0" x-text="compareCount" class="px-2 py-0.5 rounded-full bg-accent-500 text-white text-[10px] font-bold"></span>
                     </a>
-                    <a href="#how-it-works" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
-                                      transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
-                        How It Works
-                    </a>
-                    <a href="#" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
-                                      transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
-                        How It Works
-                    </a>
-                    <a href="#" class="block px-4 py-3 rounded-xl text-surface-300 font-medium
-                                      transition-all duration-300 hover:bg-white/5 hover:text-white hover:pl-6">
+                    <a href="/Home/About" class="@aboutMobileClass">
                         About
                     </a>
                 </div>
@@ -346,14 +382,18 @@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <a asp-controller="Dashboard" asp-action="Index" class="btn-primary flex-1 justify-center">Dashboard</a>
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="flex-1">
-                            <button type="submit" class="btn-outline w-full justify-center">Sign Out</button>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="flex-1" id="logout-mobile-form">
+                            <button type="button"
+                                    @@click="$dispatch('confirm-action', { message: 'Are you sure you want to sign out?', action: () => { document.getElementById('logout-mobile-form').submit(); } })"
+                                    class="btn-outline w-full justify-center">Sign Out</button>
                         </form>
                     }
                     else
                     {
-                        <a asp-controller="Account" asp-action="Login" class="btn-outline flex-1 justify-center">Sign In</a>
-                        <a asp-controller="Account" asp-action="Register" class="btn-primary flex-1 justify-center">Join Free</a>
+                        <a asp-controller="Account" asp-action="Login" 
+                           class="@(isLoginActive ? "btn-primary flex-1 justify-center" : "btn-outline flex-1 justify-center")">Sign In</a>
+                        <a asp-controller="Account" asp-action="Register" 
+                           class="@(isRegisterActive || (!isLoginActive && !isRegisterActive) ? "btn-primary flex-1 justify-center" : "btn-outline flex-1 justify-center")">Join Free</a>
                     }
                 </div>
             </div>
@@ -361,114 +401,452 @@
     </header>
 
     @* ── MAIN CONTENT ── *@
-    <main class="flex-1">
+    <main class="@(ViewData["FitToScreen"] as bool? == true ? "flex-1 flex flex-col lg:overflow-hidden lg:min-h-0" : "flex-1")">
         @RenderBody()
     </main>
 
     @* ── FOOTER ── *@
-    <footer class="relative mt-auto border-t border-surface-800/50 bg-surface-950">
-        <!-- Gradient line at top -->
-        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-
-                @* ── Brand Column ── *@
-                <div class="lg:col-span-1">
-                    <a href="/" class="inline-flex items-center gap-3 group mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700
-                                    flex items-center justify-center shadow-glow-sm
-                                    group-hover:shadow-glow transition-all duration-500">
-                            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <span class="text-xl font-display font-bold text-white">
-                            Revv<span class="text-gradient">Up</span>
-                        </span>
-                    </a>
-                    <p class="text-surface-400 text-sm leading-relaxed mb-6">
-                        Premium automotive platform for curated car browsing and discovery.
-                        Seamless browsing, comparison, and dealer inquiries.
-                    </p>
-                    <div class="flex gap-3">
-                        <!-- Social icons -->
-                        <a href="#" class="w-10 h-10 rounded-xl bg-surface-800/80 flex items-center justify-center
-                                         text-surface-400 hover:text-white hover:bg-primary-600
-                                         transition-all duration-300 hover:-translate-y-1" aria-label="Twitter">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                        </a>
-                        <a href="#" class="w-10 h-10 rounded-xl bg-surface-800/80 flex items-center justify-center
-                                         text-surface-400 hover:text-white hover:bg-primary-600
-                                         transition-all duration-300 hover:-translate-y-1" aria-label="Instagram">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                        </a>
-                        <a href="#" class="w-10 h-10 rounded-xl bg-surface-800/80 flex items-center justify-center
-                                         text-surface-400 hover:text-white hover:bg-primary-600
-                                         transition-all duration-300 hover:-translate-y-1" aria-label="YouTube">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                        </a>
+    @if (ViewData["HideFooter"] as bool? != true)
+    {
+        @if (ViewData["UseCompactFooter"] as bool? == true)
+        {
+            <footer class="relative mt-auto border-t border-surface-800/50 bg-surface-950 py-4 flex-shrink-0 z-20">
+                <!-- Gradient line at top -->
+                <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
+                <div class="premium-container flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-surface-550">
+                    <p>&copy; @DateTime.Now.Year RevvUp. All rights reserved. Built with <span class="text-accent-500">♥</span></p>
+                    <div class="flex gap-4 font-semibold">
+                        <a href="#" class="hover:text-surface-400 transition-colors">Privacy Policy</a>
+                        <a href="#" class="hover:text-surface-400 transition-colors">Terms of Service</a>
                     </div>
                 </div>
+            </footer>
+        }
+        else
+        {
+            <footer class="relative mt-auto border-t border-surface-800/50 bg-surface-950">
+                <!-- Gradient line at top -->
+                <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent"></div>
 
-                @* ── Quick Links ── *@
-                <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-6">Explore</h4>
-                    <ul class="space-y-3">
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Browse All Cars</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">New Arrivals</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Certified Pre-Owned</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Electric Vehicles</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Luxury Collection</a></li>
-                    </ul>
-                </div>
+                <div class="premium-container py-16">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        @* ── Brand Column ── *@
+                        <div>
+                            <a href="/" class="inline-flex items-center gap-3 group mb-4">
+                                <div class="w-9 h-9 rounded-xl bg-surface-900/50 border border-surface-800/40 p-1.5 flex items-center justify-center shadow-glow-sm group-hover:shadow-glow transition-all duration-500">
+                                    <img src="/images/logo.png" class="w-full h-full object-contain" alt="RevvUp Logo" />
+                                </div>
+                                <span class="text-xl font-display font-bold text-white">
+                                    Revv<span class="text-gradient">Up</span>
+                                </span>
+                            </a>
+                            <p class="text-surface-400 text-sm leading-relaxed mb-4 max-w-sm">
+                                Premium automotive platform for curated car browsing and discovery.
+                            </p>
+                            <div class="flex gap-2">
+                                <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="Twitter">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                </a>
+                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="Instagram">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                </a>
+                                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="YouTube">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                </a>
+                            </div>
+                        </div>
 
-                @* ── Buyer Tools ── *@
-                <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-6">Buyer Tools</h4>
-                    <ul class="space-y-3">
-                        <li><a href="/Cars/Browse" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Car Finder</a></li>
-                        <li><a x-bind:href="compareLink" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Compare Tool</a></li>
-                        <li><a href="/Dashboard/SavedCars" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Saved Wishlist</a></li>
-                        <li><a href="/Dashboard/Messages" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Inquiry Desk</a></li>
-                    </ul>
-                </div>
+                        @* ── Quick Links ── *@
+                        <div>
+                            <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Explore</h4>
+                            <ul class="space-y-2 text-sm text-surface-400">
+                                <li><a href="/Cars/Browse" class="hover:text-primary-400 transition-colors">Browse All Cars</a></li>
+                                <li><a href="/Cars/Browse?sortBy=newest" class="hover:text-primary-400 transition-colors">New Arrivals</a></li>
+                                <li><a href="/Cars/Browse?fuelType=Electric" class="hover:text-primary-400 transition-colors">Electric Vehicles</a></li>
+                                <li><a href="/Cars/Browse?bodyType=Coupe" class="hover:text-primary-400 transition-colors">Luxury Collection</a></li>
+                            </ul>
+                        </div>
 
-                @* ── Company ── *@
-                <div>
-                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-6">Company</h4>
-                    <ul class="space-y-3">
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">About RevvUp</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">How It Works</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Careers</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Press</a></li>
-                        <li><a href="#" class="text-surface-400 text-sm hover:text-primary-400 transition-colors duration-300">Contact</a></li>
-                    </ul>
-                </div>
-            </div>
+                        @* ── Buyer Tools ── *@
+                        <div>
+                            <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Buyer Tools</h4>
+                            <ul class="space-y-2 text-sm text-surface-400">
+                                <li><a href="/Cars/Browse" class="hover:text-primary-400 transition-colors">Car Finder</a></li>
+                                <li><a x-bind:href="compareLink" class="hover:text-primary-400 transition-colors">Compare Tool</a></li>
+                                <li><a href="/Dashboard/SavedCars" class="hover:text-primary-400 transition-colors">Saved Wishlist</a></li>
+                                <li><a href="/Dashboard/Messages" class="hover:text-primary-400 transition-colors">Inquiry Desk</a></li>
+                            </ul>
+                        </div>
 
-            @* ── Bottom Bar ── *@
-            <div class="divider mt-12 mb-8"></div>
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-surface-500 text-sm">
-                    &copy; @DateTime.Now.Year RevvUp. All rights reserved. Built with
-                    <span class="text-accent-500">♥</span> for car enthusiasts.
-                </p>
-                <div class="flex items-center gap-6">
-                    <a href="#" class="text-surface-500 text-xs hover:text-surface-300 transition-colors">Privacy Policy</a>
-                    <a href="#" class="text-surface-500 text-xs hover:text-surface-300 transition-colors">Terms of Service</a>
-                    <a href="#" class="text-surface-500 text-xs hover:text-surface-300 transition-colors">Cookie Policy</a>
+                        @* ── Company ── *@
+                        <div>
+                            <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Company</h4>
+                            <ul class="space-y-2 text-sm text-surface-400">
+                                <li><a href="/Home/About" class="hover:text-primary-400 transition-colors">About RevvUp</a></li>
+                                <li><a href="/Home/About#how-it-works" class="hover:text-primary-400 transition-colors">How It Works</a></li>
+                                <li><a href="#" class="hover:text-primary-400 transition-colors">Careers</a></li>
+                                <li><a href="#" class="hover:text-primary-400 transition-colors">Contact</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    @* ── Bottom Bar ── *@
+                    <div class="divider my-6"></div>
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-surface-500">
+                        <p>&copy; @DateTime.Now.Year RevvUp. All rights reserved. Built with <span class="text-accent-500">♥</span></p>
+                        <div class="flex gap-4">
+                            <a href="#" class="hover:text-surface-350 transition-colors">Privacy Policy</a>
+                            <a href="#" class="hover:text-surface-350 transition-colors">Terms of Service</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </footer>
+            </footer>
+        }
+    }
 
     @* ── Scripts ── *@
     @await RenderSectionAsync("Scripts", required: false)
+
+    @* ── Back to Top Floating widget ── *@
+    <div x-data="{ 
+             show: false, 
+             percent: 0,
+             updateProgress() {
+                 this.show = (window.scrollY > 400);
+                 const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+                 this.percent = totalHeight > 0 ? Math.round((window.scrollY / totalHeight) * 100) : 0;
+             }
+         }"
+         x-on:scroll.window="updateProgress()"
+         x-init="updateProgress()"
+         class="fixed bottom-8 right-8 z-50"
+         x-cloak>
+        <button x-show="show"
+                x-transition:enter="transition ease-out duration-500"
+                x-transition:enter-start="opacity-0 translate-y-16 scale-90 blur-sm"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100 blur-none"
+                x-transition:leave="transition ease-in duration-300"
+                x-transition:leave-start="opacity-100 translate-y-0 scale-100 blur-none"
+                x-transition:leave-end="opacity-0 translate-y-16 scale-90 blur-sm"
+                x-on:click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                class="relative w-14 h-14 rounded-full flex items-center justify-center group overflow-hidden border border-primary-500/20 bg-surface-900/90 text-white backdrop-blur-md shadow-glow-sm hover:shadow-glow hover:border-primary-400 hover:scale-110 active:scale-95 transition-all duration-300"
+                aria-label="Back to Top">
+            
+            <!-- Background gradient hover -->
+            <div class="absolute inset-0 bg-gradient-to-tr from-primary-600/10 to-accent-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+            <!-- SVG circular progress ring -->
+            <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 36 36">
+                <!-- Back Ring -->
+                <path class="text-surface-800" stroke="currentColor" stroke-width="2.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <!-- Active Ring -->
+                <path class="text-primary-500 transition-all duration-100" 
+                      x-bind:stroke-dasharray="percent + ', 100'"
+                      stroke="currentColor" 
+                      stroke-width="2.5" 
+                      stroke-linecap="round" 
+                      fill="none" 
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+
+            <!-- Arrow icon -->
+            <svg class="w-5 h-5 text-primary-400 group-hover:text-white group-hover:-translate-y-1 transition-all duration-300 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+            </svg>
+        </button>
+    </div>
+
+    @* ── SILENT TOAST & CONFIRMATION HELPERS ── *@
+    <script>
+        window.showToast = (message, type = 'success') => {
+            window.dispatchEvent(new CustomEvent('toast', {
+                detail: { message: message, type: type }
+            }));
+        };
+        window.showConfirm = (title, message, confirmCallback, confirmText = 'Confirm', cancelText = 'Cancel') => {
+            window.dispatchEvent(new CustomEvent('confirm-action', {
+                detail: {
+                    message: message,
+                    action: confirmCallback
+                }
+            }));
+        };
+
+        // ── Custom HTMX Confirmation Bridge ──
+        document.addEventListener('htmx:confirm', function(evt) {
+            // Only prompt if a confirmation message (hx-confirm) is specified
+            if (!evt.detail.question) {
+                return;
+            }
+            evt.preventDefault();
+            window.dispatchEvent(new CustomEvent('confirm-action', {
+                detail: {
+                    message: evt.detail.question,
+                    action: () => {
+                        evt.detail.issueRequest(true);
+                    }
+                }
+            }));
+        });
+    </script>
+
+    @* ── Reusable Alpine.js Confirmation Modal ── *@
+    <div x-data="{ 
+             isOpen: false, 
+             message: '', 
+             action: null,
+             openModal(e) {
+                 this.message = e.detail.message;
+                 this.action = e.detail.action;
+                 this.isOpen = true;
+             },
+             confirm() {
+                 if (this.action) this.action();
+                 this.isOpen = false;
+             },
+             cancel() {
+                 this.isOpen = false;
+             }
+         }"
+         @@confirm-action.window="openModal($event)"
+         x-show="isOpen"
+         class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+         x-cloak>
+        
+        @* Backdrop Overlay *@
+        <div class="fixed inset-0 bg-surface-950/80 backdrop-blur-md transition-opacity duration-300"
+             x-show="isOpen"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @@click="cancel()"></div>
+
+        @* Modal Box *@
+        <div class="relative w-full max-w-md card-glass border border-surface-800 bg-surface-900/95 p-6 rounded-2xl shadow-elevated z-10 transition-all transform duration-300"
+             x-show="isOpen"
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+            
+            <div class="flex items-start gap-4">
+                @* Warning Icon Circle *@
+                <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-lg font-display font-bold text-white mb-2">Confirm Action</h3>
+                    <p class="text-sm text-surface-300 leading-relaxed" x-text="message"></p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-surface-800">
+                <button type="button" 
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-surface-300 hover:text-white bg-white/5 hover:bg-white/10 transition-all duration-350"
+                        @@click="cancel()">
+                    Cancel
+                </button>
+                <button type="button" 
+                        class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 hover:shadow-glow-sm shadow-red-600/20 transition-all duration-350"
+                        @@click="confirm()">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* ── Reusable Premium Alpine.js Toast Notification System ── *@
+    <div x-data="{
+             toasts: [],
+             addToast(message, type = 'success') {
+                 const id = Date.now() + Math.random().toString(36).substr(2, 9);
+                 const newToast = { id, message, type, visible: false };
+                 this.toasts.push(newToast);
+                 
+                 this.$nextTick(() => {
+                     const t = this.toasts.find(item => item.id === id);
+                     if (t) t.visible = true;
+                 });
+
+                 setTimeout(() => {
+                     this.removeToast(id);
+                 }, 3000);
+             },
+             removeToast(id) {
+                 const t = this.toasts.find(item => item.id === id);
+                 if (t) {
+                     t.visible = false;
+                     setTimeout(() => {
+                         this.toasts = this.toasts.filter(item => item.id !== id);
+                     }, 300);
+                 }
+             }
+         }"
+         @@toast.window="addToast($event.detail.message, $event.detail.type)"
+         class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none"
+         x-cloak>
+         
+         <template x-for="t in toasts" :key="t.id">
+             <div x-show="t.visible"
+                  x-transition:enter="transition ease-out duration-300 transform"
+                  x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:translate-x-4 scale-95"
+                  x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0 scale-100"
+                  x-transition:leave="transition ease-in duration-200 transform"
+                  x-transition:leave-start="opacity-100 scale-100"
+                  x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                  class="pointer-events-auto w-full card-glass border bg-surface-900/95 p-4 rounded-xl shadow-elevated flex items-center gap-3 transition-all duration-300"
+                  :class="t.type === 'error' ? 'border-red-500/30 hover:border-red-500/50 shadow-red-500/5' : 'border-surface-800 hover:border-primary-500/30 shadow-primary-500/5'">
+                  
+                  <div class="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg"
+                       :class="t.type === 'error' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'">
+                      <template x-if="t.type !== 'error'">
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                      </template>
+                      <template x-if="t.type === 'error'">
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                      </template>
+                  </div>
+                  
+                  <div class="flex-grow min-w-0">
+                       <p class="text-xs font-semibold text-white leading-relaxed" x-text="t.message"></p>
+                  </div>
+
+                  <button type="button" 
+                          class="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-surface-500 hover:text-white hover:bg-white/5 transition-all"
+                          @@click="removeToast(t.id)">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                  </button>
+             </div>
+         </template>
+     </div>
 
     <style>
         /* Alpine.js cloak — hide elements until Alpine initializes */
         [x-cloak] { display: none !important; }
     </style>
+    <script>
+    function notifDropdown() {
+        return {
+            open: false,
+            notifications: [],
+            unreadCount: 0,
+
+            async init() {
+                await this.fetchNotifs();
+
+                // SignalR real-time listener
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/notificationHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on("ReceiveNotification", (notif) => {
+                    if (!this.notifications.some(n => n.id === notif.id)) {
+                        this.notifications.unshift(notif);
+                        this.unreadCount++;
+                        this.$dispatch('toast', { 
+                            message: notif.message, 
+                            type: 'info' 
+                        });
+                    }
+                });
+
+                try {
+                    await connection.start();
+                    window.notificationConnection = connection;
+                } catch (err) {
+                    console.error("SignalR connection failed: ", err);
+                }
+            },
+
+            toggle() {
+                this.open = !this.open;
+            },
+
+            async fetchNotifs() {
+                try {
+                    const res = await fetch('/Notifications/GetAll');
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.notifications = data;
+                        this.unreadCount = data.filter(n => !n.isRead).length;
+                    }
+                } catch (err) {
+                    console.error("Error fetching notifications: ", err);
+                }
+            },
+
+            async markRead(id) {
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    await fetch(`/Notifications/MarkRead/${id}`, { 
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token || ''
+                        }
+                    });
+                    const notif = this.notifications.find(n => n.id === id);
+                    if (notif) { notif.isRead = true; }
+                    this.unreadCount = this.notifications.filter(n => !n.isRead).length;
+                } catch (err) {
+                    console.error("Error marking notification as read: ", err);
+                }
+            },
+
+            async markAllRead() {
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    await fetch('/Notifications/MarkAllRead', { 
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token || ''
+                        }
+                    });
+                    this.notifications.forEach(n => n.isRead = true);
+                    this.unreadCount = 0;
+                } catch (err) {
+                    console.error("Error marking all as read: ", err);
+                }
+            },
+
+            timeAgo(dateStr) {
+                const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+                if (diff < 60) return `${diff}s ago`;
+                if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+                if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+                return `${Math.floor(diff/86400)}d ago`;
+            }
+        }
+    }
+    </script>
+
+    @* Anti-Forgery token container *@
+    <div class="hidden">
+        @Html.AntiForgeryToken()
+    </div>
+
+    <script>
+        // Automatically inject anti-forgery tokens into all HTMX AJAX requests
+        document.body.addEventListener('htmx:configRequest', function (event) {
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (tokenElement) {
+                event.detail.headers['RequestVerificationToken'] = tokenElement.value;
+            }
+        });
+    </script>
 </body>
 </html>

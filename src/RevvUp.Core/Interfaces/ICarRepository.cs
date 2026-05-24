@@ -28,6 +28,8 @@ public interface ICarRepository
     Task AddInquiryAsync(Inquiry inquiry);
     Task<IEnumerable<Inquiry>> GetInquiriesByUserIdAsync(string userId);
     Task<Inquiry?> GetInquiryByIdAsync(Guid id);
+    Task UpdateInquiryAsync(Inquiry inquiry);
+    Task DeleteInquiryAsync(Guid id);
 
     // ── Chat Message Operations ──
     Task AddChatMessageAsync(ChatMessage message);
@@ -38,4 +40,8 @@ public interface ICarRepository
     Task RemoveFavoriteAsync(string userId, Guid carId);
     Task<IEnumerable<Favorite>> GetFavoritesByUserIdAsync(string userId);
     Task<bool> IsFavoriteAsync(string userId, Guid carId);
+
+    // ── Seller Operations ──
+    Task<IEnumerable<Car>> GetCarsBySellerIdAsync(string sellerId);
+    Task<IEnumerable<Inquiry>> GetInquiriesByCarIdAsync(Guid carId);
 }

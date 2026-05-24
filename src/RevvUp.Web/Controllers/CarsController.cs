@@ -20,11 +20,13 @@ public class CarsController : Controller
 {
     private readonly ICarService _carService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RevvUp.Web.Services.NotificationService _notifService;
 
-    public CarsController(ICarService carService, UserManager<ApplicationUser> userManager)
+    public CarsController(ICarService carService, UserManager<ApplicationUser> userManager, RevvUp.Web.Services.NotificationService notifService)
     {
         _carService = carService;
         _userManager = userManager;
+        _notifService = notifService;
     }
 
     /// <summary>Browse all cars with filters + pagination</summary>
@@ -69,31 +71,38 @@ public class CarsController : Controller
         if (maxYear.HasValue) filtered = filtered.Where(c => c.Year <= maxYear.Value);
         if (maxMileage.HasValue) filtered = filtered.Where(c => c.Mileage <= maxMileage.Value);
 
-        // ── Sort ──
         filtered = sortBy switch
         {
             "price-low" => filtered.OrderBy(c => c.Price),
             "price-high" => filtered.OrderByDescending(c => c.Price),
             "year-new" => filtered.OrderByDescending(c => c.Year),
             "mileage-low" => filtered.OrderBy(c => c.Mileage),
+            "mileage-high" => filtered.OrderByDescending(c => c.Mileage),
             _ => filtered.OrderByDescending(c => c.DateAdded)
         };
+
+        var currentUserId = _userManager.GetUserId(User);
+        var favoriteCarIds = new HashSet<Guid>();
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            var favorites = await _carService.GetFavoritesByUserIdAsync(currentUserId);
+            favoriteCarIds = new HashSet<Guid>(favorites.Select(f => f.CarId));
+        }
 
         var filteredList = filtered.ToList();
         vm.TotalCount = filteredList.Count;
         vm.Cars = filteredList.Skip((page - 1) * vm.PageSize).Take(vm.PageSize)
             .Select(c => new CarCardViewModel
             {
-                Id = c.Id, Brand = c.Brand, Model = c.Model, Year = c.Year,
+                Id = c.Id,
+                SellerId = c.SellerId,
+                IsFavoritedByCurrentUser = favoriteCarIds.Contains(c.Id),
+                Brand = c.Brand, Model = c.Model, Year = c.Year,
                 Price = c.Price, ImageUrls = c.ImageUrls, Mileage = c.Mileage,
                 FuelType = c.FuelType, Transmission = c.Transmission, BodyType = c.BodyType,
-                Color = c.Color, Condition = c.Condition, IsFeatured = c.IsFeatured,
+                Color = c.Color, Condition = c.Condition, Engine = c.Engine, IsFeatured = c.IsFeatured,
                 Description = c.Description, DateAdded = c.DateAdded, Features = c.Features, Status = c.Status
             }).ToList();
-
-        // ── HTMX partial for infinite scroll ──
-        if (Request.Headers.ContainsKey("HX-Request"))
-            return PartialView("_CarGrid", vm);
 
         return View(vm);
     }
@@ -110,8 +119,8 @@ public class CarsController : Controller
         {
             id = c.Id,
             name = $"{c.Year} {c.Brand} {c.Model}",
-            price = $"${c.Price:N0}",
-            image = c.ImageUrls.Split(';', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty,
+            price = $"₱{c.Price:N0}",
+            image = (c.ImageUrls ?? string.Empty).Split(';', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty,
             bodyType = c.BodyType
         });
         return Json(results);
@@ -126,22 +135,27 @@ public class CarsController : Controller
 
         var vm = new CarCardViewModel
         {
-            Id = car.Id, Brand = car.Brand, Model = car.Model, Year = car.Year,
+            Id = car.Id, SellerId = car.SellerId, Brand = car.Brand, Model = car.Model, Year = car.Year,
             Price = car.Price, ImageUrls = car.ImageUrls, Mileage = car.Mileage,
             FuelType = car.FuelType, Transmission = car.Transmission, BodyType = car.BodyType,
-            Color = car.Color, Condition = car.Condition, IsFeatured = car.IsFeatured,
+            Color = car.Color, Condition = car.Condition, Engine = car.Engine, IsFeatured = car.IsFeatured,
             Description = car.Description, DateAdded = car.DateAdded, Features = car.Features, Status = car.Status
         };
 
         var currentUserId = _userManager.GetUserId(User) ?? string.Empty;
         ViewBag.CurrentUserId = currentUserId;
+        ViewBag.CarSellerId   = car.SellerId ?? string.Empty;
 
         // Check if this car is already favorited
         ViewBag.IsFavorite = false;
+        var favoriteCarIds = new HashSet<Guid>();
         if (!string.IsNullOrEmpty(currentUserId))
         {
-            ViewBag.IsFavorite = await _carService.IsFavoriteAsync(currentUserId, id);
+            var favorites = await _carService.GetFavoritesByUserIdAsync(currentUserId);
+            favoriteCarIds = new HashSet<Guid>(favorites.Select(f => f.CarId));
+            ViewBag.IsFavorite = favoriteCarIds.Contains(id);
         }
+        vm.IsFavoritedByCurrentUser = ViewBag.IsFavorite;
 
         // Fetch similar cars (same body type or brand, excluding current car)
         var allCars = await _carService.GetAllCarsAsync();
@@ -150,10 +164,13 @@ public class CarsController : Controller
             .Take(3)
             .Select(c => new CarCardViewModel
             {
-                Id = c.Id, Brand = c.Brand, Model = c.Model, Year = c.Year,
+                Id = c.Id,
+                SellerId = c.SellerId,
+                IsFavoritedByCurrentUser = favoriteCarIds.Contains(c.Id),
+                Brand = c.Brand, Model = c.Model, Year = c.Year,
                 Price = c.Price, ImageUrls = c.ImageUrls, Mileage = c.Mileage,
                 FuelType = c.FuelType, Transmission = c.Transmission, BodyType = c.BodyType,
-                Color = c.Color, Condition = c.Condition, IsFeatured = c.IsFeatured,
+                Color = c.Color, Condition = c.Condition, Engine = c.Engine, IsFeatured = c.IsFeatured,
                 Description = c.Description, DateAdded = c.DateAdded, Features = c.Features, Status = c.Status
             }).ToList();
 
@@ -166,6 +183,14 @@ public class CarsController : Controller
     [HttpGet]
     public async Task<IActionResult> Compare(string? ids)
     {
+        var currentUserId = _userManager.GetUserId(User);
+        var favoriteCarIds = new HashSet<Guid>();
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            var favorites = await _carService.GetFavoritesByUserIdAsync(currentUserId);
+            favoriteCarIds = new HashSet<Guid>(favorites.Select(f => f.CarId));
+        }
+
         var carViewModels = new List<CarCardViewModel>();
         if (!string.IsNullOrEmpty(ids))
         {
@@ -181,10 +206,13 @@ public class CarsController : Controller
                 {
                     carViewModels.Add(new CarCardViewModel
                     {
-                        Id = car.Id, Brand = car.Brand, Model = car.Model, Year = car.Year,
+                        Id = car.Id,
+                        SellerId = car.SellerId,
+                        IsFavoritedByCurrentUser = favoriteCarIds.Contains(car.Id),
+                        Brand = car.Brand, Model = car.Model, Year = car.Year,
                         Price = car.Price, ImageUrls = car.ImageUrls, Mileage = car.Mileage,
                         FuelType = car.FuelType, Transmission = car.Transmission, BodyType = car.BodyType,
-                        Color = car.Color, Condition = car.Condition, IsFeatured = car.IsFeatured,
+                        Color = car.Color, Condition = car.Condition, Engine = car.Engine, IsFeatured = car.IsFeatured,
                         Description = car.Description, DateAdded = car.DateAdded, Features = car.Features, Status = car.Status
                     });
                 }
@@ -195,6 +223,7 @@ public class CarsController : Controller
 
     /// <summary>Post inquiry for a car listing (AJAX/Fetch API)</summary>
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ContactSeller([FromBody] InquiryInputModel model)
     {
         if (model == null || string.IsNullOrWhiteSpace(model.Message) || string.IsNullOrWhiteSpace(model.BuyerName) || string.IsNullOrWhiteSpace(model.BuyerEmail) || string.IsNullOrWhiteSpace(model.Phone))
@@ -225,12 +254,20 @@ public class CarsController : Controller
 
         await _carService.AddInquiryAsync(inquiry);
 
+        // TRIGGER 2: Create a notification for the SELLER of the car
+        if (!string.IsNullOrEmpty(car.SellerId))
+        {
+            var message = $"{model.BuyerName} sent an inquiry on your {car.Year} {car.Brand} {car.Model}";
+            await _notifService.CreateAsync(car.SellerId, message, $"/Dashboard/Messages?inquiryId={inquiry.Id}", "Inquiry");
+        }
+
         return Ok();
     }
 
     /// <summary>AJAX favorite toggling for authenticated users</summary>
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleFavorite(Guid id)
     {
         var userId = _userManager.GetUserId(User);
@@ -261,6 +298,16 @@ public class CarsController : Controller
                 DateAdded = DateTime.UtcNow
             };
             await _carService.AddFavoriteAsync(fav);
+
+            // TRIGGER 1: Create a notification for the SELLER of that car (if not self)
+            if (!string.IsNullOrEmpty(car.SellerId) && car.SellerId != userId)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var buyerName = user?.DisplayName ?? "Someone";
+                var message = $"{buyerName} saved your {car.Year} {car.Brand} {car.Model}";
+                await _notifService.CreateAsync(car.SellerId, message, "/Seller/MyListings", "Favorite");
+            }
+
             return Json(new { favorited = true });
         }
     }

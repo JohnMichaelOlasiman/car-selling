@@ -2,125 +2,232 @@
 @{
     ViewData["Title"] = "Buyer Dashboard";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    ViewData["FitToScreen"] = true;
+    ViewData["UseCompactFooter"] = true;
     var userName = ViewData["UserName"]?.ToString() ?? "Valued Buyer";
     var recentActivities = ViewBag.RecentActivities as List<DashboardActivity> ?? new List<DashboardActivity>();
 }
 
-<div class="animate-fade-in-up">
+<style>
+    /* 1. Rigid container height relative to the viewport */
+    .dashboard-container {
+        height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 180px) !important;
+        min-height: 450px !important;
+        overflow: hidden !important;
+    }
+    @@media (min-width: 1024px) {
+        .dashboard-container {
+            height: calc(100vh - 145px) !important;
+            max-height: calc(100vh - 145px) !important;
+        }
+    }
+
+    /* 2. Visible scrollbar rules for panels */
+    .custom-scrollbar {
+        overflow-y: auto !important;
+        scrollbar-width: thin !important; /* Firefox compatibility */
+        scrollbar-color: rgba(59, 130, 246, 0.45) rgba(15, 23, 42, 0.15) !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+        display: block !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.2) !important;
+        border-radius: 9999px !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.45) !important;
+        border-radius: 9999px !important;
+        border: 2px solid rgba(10, 14, 20, 0.8) !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.75) !important;
+    }
+</style>
+
+<div class="py-2 animate-fade-in-up flex-grow flex flex-col dashboard-container overflow-hidden">
     @* ── Welcome Header ── *@
     <div class="mb-8">
-        <h1 class="text-3xl font-display font-bold text-white mb-2">
-            Welcome, @userName!
+        <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-1">Buyer Command Center</span>
+        <h1 class="text-4xl font-display font-black text-white mb-2">
+            Welcome back, <span class="text-gradient">@userName</span>!
         </h1>
-        <p class="text-surface-400">Manage your premium curated car discoveries and active dealership inquiries.</p>
+        <p class="text-surface-400 text-sm">Manage your premium curated car discoveries and active dealership inquiries from a unified desk.</p>
     </div>
 
-    @* ── Stats Grid (Buyer Curation Only) ── *@
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+    @* ── Stats Grid (Compact Top Row) ── *@
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6 flex-shrink-0">
+        
         @* Saved Vehicles (Favorites) *@
-        <div class="card p-6 group hover:border-pink-500/30 transition-all duration-500 relative overflow-hidden bg-gradient-to-br from-surface-900/40 via-surface-900/20 to-pink-950/10">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-pink-500/20">
-                    <svg class="w-6 h-6 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div class="card-glass p-5 group hover:border-pink-500/30 transition-all duration-500 relative overflow-hidden bg-gradient-to-br from-surface-900/60 via-surface-900/40 to-pink-950/15 shadow-elevated">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-pink-500/20">
+                    <svg class="w-5 h-5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                     </svg>
                 </div>
-                <a href="/Dashboard/SavedCars" class="text-xs font-bold text-pink-400 hover:text-pink-300 uppercase tracking-wider transition-colors">View Wishlist</a>
+                <a href="/Dashboard/SavedCars" class="text-[10px] font-extrabold text-pink-400 hover:text-pink-300 uppercase tracking-wider transition-colors">View Wishlist</a>
             </div>
-            <div class="text-4xl font-display font-black text-white tracking-tight">@ViewBag.FavoritesCount</div>
-            <div class="text-sm font-semibold text-surface-300 mt-2">Saved Vehicles</div>
-            <p class="text-xs text-surface-500 mt-1">High-end models saved for future evaluation.</p>
+            <div class="text-4xl font-display font-black text-white tracking-tight" x-text="favoritesCount">@ViewBag.FavoritesCount</div>
+            <div class="text-xs font-bold text-surface-200 mt-1.5">Saved Vehicles</div>
+            <p class="text-[11px] text-surface-450 mt-0.5">High-end models saved for monitoring.</p>
         </div>
 
         @* Sent Inquiries *@
-        <div class="card p-6 group hover:border-primary-500/30 transition-all duration-500 relative overflow-hidden bg-gradient-to-br from-surface-900/40 via-surface-900/20 to-primary-950/10">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-primary-500/20">
-                    <svg class="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <div class="card-glass p-5 group hover:border-primary-500/30 transition-all duration-500 relative overflow-hidden bg-gradient-to-br from-surface-900/60 via-surface-900/40 to-primary-950/15 shadow-elevated">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-primary-500/20">
+                    <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
                     </svg>
                 </div>
-                <a href="/Dashboard/Messages" class="text-xs font-bold text-primary-400 hover:text-primary-300 uppercase tracking-wider transition-colors">Open Inbox</a>
+                <a href="/Dashboard/Messages" class="text-[10px] font-extrabold text-primary-400 hover:text-primary-300 uppercase tracking-wider transition-colors">Open Inbox</a>
             </div>
             <div class="text-4xl font-display font-black text-white tracking-tight">@ViewBag.InquiriesCount</div>
-            <div class="text-sm font-semibold text-surface-300 mt-2">Active Inquiries</div>
-            <p class="text-xs text-surface-500 mt-1">Direct communication channels with the dealership desk.</p>
+            <div class="text-xs font-bold text-surface-200 mt-1.5">Active Inquiries</div>
+            <p class="text-[11px] text-surface-450 mt-0.5">Dealer coordinator communication queues.</p>
+        </div>
+
+        @* Compared Models *@
+        <div class="card-glass p-5 group hover:border-accent-500/30 transition-all duration-500 relative overflow-hidden bg-gradient-to-br from-surface-900/60 via-surface-900/40 to-accent-950/15 shadow-elevated">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 rounded-xl bg-accent-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-accent-500/20">
+                    <svg class="w-5 h-5 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                </div>
+                <a x-bind:href="compareLink" class="text-[10px] font-extrabold text-accent-400 hover:text-accent-300 uppercase tracking-wider transition-colors">Compare Tool</a>
+            </div>
+            <div class="text-4xl font-display font-black text-white tracking-tight" x-text="compareCount">0</div>
+            <div class="text-xs font-bold text-surface-200 mt-1.5">Compared Models</div>
+            <p class="text-[11px] text-surface-450 mt-0.5">Vehicles queued for spec comparisons.</p>
         </div>
     </div>
 
-    @* ── Quick Actions ── *@
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <a href="/Cars/Browse" class="card-interactive p-6 flex items-center gap-4 hover:border-primary-500/20 bg-gradient-to-r from-surface-900/40 to-surface-900/10">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500/15 to-primary-600/5
-                        border border-primary-500/20 flex items-center justify-center flex-shrink-0">
-                <svg class="w-7 h-7 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-            </div>
-            <div>
-                <h3 class="text-lg font-display font-bold text-white mb-1">Browse Premium Inventory</h3>
-                <p class="text-sm text-surface-400">Discover 50+ professionally curated sports and luxury vehicles</p>
-            </div>
-            <svg class="w-5 h-5 text-surface-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-        </a>
+    @* ── Fixed-Height 2-Column Body Layout ── *@
+    <div class="flex flex-col lg:flex-row gap-6 h-auto lg:h-[420px] flex-shrink-0 mb-6">
 
-        <a href="/Cars/Compare" class="card-interactive p-6 flex items-center gap-4 hover:border-accent-500/20 bg-gradient-to-r from-surface-900/40 to-surface-900/10">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-500/15 to-accent-600/5
-                        border border-accent-500/20 flex items-center justify-center flex-shrink-0">
-                <svg class="w-7 h-7 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+        @* ── Timeline Activity Feed (Left — scrollable inside) ── *@
+        <div class="flex-1 min-w-0 card-glass p-6 border border-surface-800/60 shadow-elevated flex flex-col bg-gradient-to-b from-surface-900/40 to-surface-950/20 overflow-hidden">
+            <h3 class="text-xl font-display font-black text-white mb-4 flex items-center gap-2 flex-shrink-0">
+                <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
-            </div>
-            <div>
-                <h3 class="text-lg font-display font-bold text-white mb-1">Spec Comparison Tool</h3>
-                <p class="text-sm text-surface-400">Evaluate up to 4 models side-by-side on technical specs</p>
-            </div>
-            <svg class="w-5 h-5 text-surface-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-        </a>
-    </div>
+                Timeline Activity Feed
+            </h3>
 
-    @* ── Recent Activity Feed ── *@
-    <div class="card p-6">
-        <h3 class="text-lg font-display font-bold text-white mb-6 flex items-center gap-2">
-            <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            Timeline Activity Feed
-        </h3>
-        <div class="space-y-4">
-            @if (!recentActivities.Any())
-            {
-                <div class="text-center py-12 text-surface-500 text-sm italic">
-                    No recent activity recorded yet. Browse the inventory to save favorites or submit inquiries!
-                </div>
-            }
-            else
-            {
-                @foreach (var activity in recentActivities)
+            <div class="relative pl-6 border-l border-surface-800 space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar pb-2 min-h-0">
+                @if (!recentActivities.Any())
                 {
-                    var colorClass = "bg-primary-500 shadow-primary-500/20";
-                    if (activity.Color == "green") colorClass = "bg-green-500 shadow-green-500/20";
-                    else if (activity.Color == "pink") colorClass = "bg-pink-500 shadow-pink-500/20";
-                    else if (activity.Color == "accent") colorClass = "bg-accent-500 shadow-accent-500/20";
-                    else if (activity.Color == "purple") colorClass = "bg-purple-500 shadow-purple-500/20";
-
-                    <a href="@activity.Link" class="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 border border-transparent hover:border-surface-800 transition-all duration-300">
-                        <div class="w-3 h-3 rounded-full flex-shrink-0 @colorClass shadow-glow-sm"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-white">@activity.Title</p>
-                            <p class="text-xs text-surface-400 mt-1 leading-relaxed">@activity.Description</p>
-                        </div>
-                        <div class="text-[10px] text-surface-500 font-mono whitespace-nowrap font-semibold uppercase tracking-wider pl-4">
-                            @activity.Timestamp.ToLocalTime().ToString("MMM dd, h:mm tt")
-                        </div>
-                    </a>
+                    <div class="text-center py-16 text-surface-500 text-sm italic -ml-6 flex flex-col items-center justify-center h-full">
+                        No recent activity recorded yet. Browse the inventory to save favorites or submit inquiries!
+                    </div>
                 }
-            }
+                else
+                {
+                    @foreach (var activity in recentActivities)
+                    {
+                        var colorClass = "bg-primary-500 shadow-primary-500/20";
+                        var dotColor = "border-primary-500/50 bg-primary-500/25";
+                        if (activity.Color == "green") 
+                        {
+                            colorClass = "bg-green-500 shadow-green-500/20";
+                            dotColor = "border-green-500/50 bg-green-500/25";
+                        }
+                        else if (activity.Color == "pink")
+                        {
+                            colorClass = "bg-pink-500 shadow-pink-500/20";
+                            dotColor = "border-pink-500/50 bg-pink-500/25";
+                        }
+                        else if (activity.Color == "accent")
+                        {
+                            colorClass = "bg-accent-500 shadow-accent-500/20";
+                            dotColor = "border-accent-500/50 bg-accent-500/25";
+                        }
+                        else if (activity.Color == "purple")
+                        {
+                            colorClass = "bg-purple-500 shadow-purple-500/20";
+                            dotColor = "border-purple-500/50 bg-purple-500/25";
+                        }
+
+                        <div class="relative group">
+                            @* Timeline Indicator Circle *@
+                            <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-2 @dotColor flex items-center justify-center bg-surface-950 transition-all duration-300 group-hover:scale-125">
+                                <div class="w-1.5 h-1.5 rounded-full @colorClass"></div>
+                            </div>
+
+                            <a href="@activity.Link" class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 rounded-xl border border-surface-850 hover:border-surface-700/80 bg-surface-950/20 hover:bg-white/5 transition-all duration-300">
+                                <div>
+                                    <p class="text-sm font-bold text-white group-hover:text-primary-400 transition-colors">@activity.Title</p>
+                                    <p class="text-xs text-surface-400 mt-1 leading-relaxed">@activity.Description</p>
+                                </div>
+                                <div class="text-[10px] text-surface-500 font-mono whitespace-nowrap font-bold uppercase tracking-wider pl-0 sm:pl-4">
+                                    @activity.Timestamp.ToLocalTime().ToString("MMM dd, h:mm tt")
+                                </div>
+                            </a>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        @* ── Action Cards Stack (Right — fixed height, no scroll) ── *@
+        <div class="w-full lg:w-[380px] flex flex-col gap-4 flex-shrink-0">
+
+            @* Card 1: Browse premium inventory *@
+            <a href="/Cars/Browse" class="card-glass p-5 flex items-center gap-4 border border-surface-800/60 hover:border-primary-500/30 hover:shadow-card-hover transition-all duration-350 group flex-1">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500/15 to-primary-600/5
+                            border border-primary-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <svg class="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-display font-bold text-white mb-0.5 group-hover:text-primary-400 transition-colors">Browse Premium Inventory</h3>
+                    <p class="text-xs text-surface-400 leading-snug">Discover 50+ professionally curated sports and luxury vehicles</p>
+                </div>
+                <svg class="w-4 h-4 text-surface-500 ml-auto group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+            </a>
+
+            @* Card 2: Spec comparison *@
+            <a x-bind:href="compareLink" class="card-glass p-5 flex items-center gap-4 border border-surface-800/60 hover:border-accent-500/30 hover:shadow-card-hover transition-all duration-350 group flex-1">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-500/15 to-accent-600/5
+                            border border-accent-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <svg class="w-6 h-6 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-display font-bold text-white mb-0.5 group-hover:text-accent-400 transition-colors">Spec Comparison Tool</h3>
+                    <p class="text-xs text-surface-400 leading-snug">Evaluate up to 4 models side-by-side on technical specs</p>
+                </div>
+                <svg class="w-4 h-4 text-surface-500 ml-auto group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+            </a>
+
+            @* Card 3: Update profile *@
+            <a href="/Account/Profile" class="card-glass p-5 flex items-center gap-4 border border-surface-800/60 hover:border-pink-500/30 hover:shadow-card-hover transition-all duration-350 group flex-1">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/15 to-pink-600/5
+                            border border-pink-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <svg class="w-6 h-6 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-display font-bold text-white mb-0.5 group-hover:text-pink-400 transition-colors">Update Profile Settings</h3>
+                    <p class="text-xs text-surface-400 leading-snug">Manage your display name, location, contact, and picture</p>
+                </div>
+                <svg class="w-4 h-4 text-surface-500 ml-auto group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+            </a>
+
         </div>
     </div>
 </div>
-
