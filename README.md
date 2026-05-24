@@ -56,6 +56,13 @@ Before launching the application, ensure you have the following installed on you
 
 ---
 
+## Database
+*   **Auto-Creation:** The SQLite database file is automatically created on first-run as `revvup.db` inside the `src/RevvUp.Web` directory.
+*   **Database Initializer:** The database initializer (`DbInitializer.cs`) runs automatically in development environments. It auto-migrates and seeds a complete starter kit containing **52 vehicle listings** pre-assigned to the default dealer account.
+*   **No Manual Setup:** Zero relational configuration, engine, or local database installs are required.
+
+---
+
 ## Getting Started
 
 Follow these steps to run the application locally on your computer:
@@ -83,6 +90,7 @@ The database operates on SQLite. In `Development` mode, migrations are automatic
 ```powershell
 dotnet ef database update --project src/RevvUp.Infrastructure --startup-project src/RevvUp.Web
 ```
+Don't mind the warnings.
 
 ### Step 5 — Run the Project
 *   Press **F5** or the **Start** button in Visual Studio.
@@ -98,13 +106,6 @@ dotnet ef database update --project src/RevvUp.Infrastructure --startup-project 
 Once compiled, the application will be hosted locally at:
 *   `https://localhost:5106`
 *   `http://localhost:5106`
-
----
-
-## Database
-*   **Auto-Creation:** The SQLite database file is automatically created on first-run as `revvup.db` inside the `src/RevvUp.Web` directory.
-*   **Database Initializer:** The database initializer (`DbInitializer.cs`) runs automatically in development environments. It auto-migrates and seeds a complete starter kit containing **52 vehicle listings** pre-assigned to the default dealer account.
-*   **No Manual Setup:** Zero relational configuration, engine, or local database installs are required.
 
 ---
 
@@ -187,4 +188,4 @@ To customize the SQLite database storage path, you can optionally define it in `
 ---
 
 ## License
-This repository is engineered for educational, demonstration, and professional portfolio purposes. All seeded vehicles and user credentials are safe development assets.
+This repository was developed strictly as a school project for academic and educational purposes. All seeded vehicle listings, user accounts, and credentials are mock data used solely for development and demonstration.
