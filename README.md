@@ -62,7 +62,7 @@ Follow these steps to run the application locally on your computer:
 
 ### Step 1 — Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/RevvUp.git
+git clone https://github.com/JohnMichaelOlasiman/car-selling.git
 ```
 
 ### Step 2 — Open in Visual Studio
@@ -102,7 +102,7 @@ Once compiled, the application will be hosted locally at:
 ---
 
 ## Database
-*   **Auto-Creation:** The SQLite database file is automatically created on first-run inside the `/App_Data/revvup.db` directory.
+*   **Auto-Creation:** The SQLite database file is automatically created on first-run as `revvup.db` inside the `src/RevvUp.Web` directory.
 *   **Database Initializer:** The database initializer (`DbInitializer.cs`) runs automatically in development environments. It auto-migrates and seeds a complete starter kit containing **52 vehicle listings** pre-assigned to the default dealer account.
 *   **No Manual Setup:** Zero relational configuration, engine, or local database installs are required.
 
@@ -128,37 +128,38 @@ Once compiled, the application will be hosted locally at:
 ## Project Structure
 
 ```text
-RevvUp/
-├── Controllers/          → MVC Controllers (Routes, actions, model-binding)
-├── Models/               → Domain Entities, ViewModels, and Form inputs  
-├── Views/                → Razor (.cshtml) layout templates
-│   ├── Shared/           → General page framework, headers, footers, & dropdowns
-│   ├── Cars/             → Catalog grids, browse search, and car details pages
-│   ├── Dashboard/        → Buyer overview, wishlists, and conversation inbox
-│   ├── Seller/           → Listings CRUD forms, status controls, and inquiries
-│   └── Account/          → Identity views (Login, Registration, Profiles)
-├── Hubs/                 → SignalR hubs facilitating real-time WebSockets connections
-├── Services/             → Core services (Notification dispatchers)
-├── Data/                 → Database Context, initialization seeds, and model constraints
-├── Migrations/           → EF Core migration files
-├── wwwroot/              → Distributed static assets
-│   ├── css/              → Tailored CSS assets
-│   ├── js/               → Reactivity scripts
-│   └── images/           → System icons and media placeholders
-├── appsettings.json      → System connection strings and environment keys
-└── Program.cs            → App builder, pipeline routes, and middleware settings
+car-selling/ (Solution Root)
+├── RevvUp.slnx                 → Visual Studio solution model definition
+└── src/                        → Core source folder
+    ├── RevvUp.Core/            → Core Domain Layer (zero external dependencies)
+    │   └── Entities/           → Domain objects (Car, ApplicationUser, Inquiry, Favorite, Notification)
+    ├── RevvUp.Application/     → Application Logic Layer (business workflows and interfaces)
+    │   ├── Services/           → Application services (e.g. CarService, InquiryService)
+    │   └── Interfaces/         → Repository contracts and service interfaces
+    ├── RevvUp.Infrastructure/  → Infrastructure Layer (data persistence & database access)
+    │   ├── Data/               → DbContext and initialization seeds (DbInitializer)
+    │   ├── Repositories/       → Relational repository implementations
+    │   └── Migrations/         → EF Core migration records
+    └── RevvUp.Web/             → Presentation Layer (MVC Web Application)
+        ├── Controllers/        → MVC routing, actions, and model mapping
+        ├── Views/              → Razor layout templates (Cars, Seller, Dashboard, Account)
+        ├── Models/             → UI-specific ViewModels
+        ├── Hubs/               → SignalR hubs facilitating real-time notifications
+        └── wwwroot/            → Static public web client assets (Tailwind CSS, JS, images)
 ```
 
 ---
 
 ## Configuration
 
-The database connection is defined in the `appsettings.json` file inside `src/RevvUp.Web`. No external API keys or credentials are required.
+The database connection is defined inside `Program.cs` under `src/RevvUp.Web`. By default, it operates on a local `revvup.db` file. No external database engines or credentials are required.
 
-To customize the SQLite database storage path, edit the connection string:
+To customize the SQLite database storage path, you can optionally define it in `appsettings.json`:
 ```json
-"ConnectionStrings": {
-  "DefaultConnection": "Data Source=App_Data/revvup.db"
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=custom_path/revvup.db"
+  }
 }
 ```
 
