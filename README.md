@@ -77,16 +77,11 @@ dotnet restore
 ```
 
 ### Step 4 — Apply Database Migrations
-The database operates on SQLite. In `Development` mode, migrations are automatically applied on application startup. To manually generate or apply them:
+The database operates on SQLite. In `Development` mode, migrations are automatically applied on application startup. To manually apply migrations from the terminal or Package Manager Console:
 
-*   **Via Package Manager Console (Tools → NuGet → Package Manager Console):**
-    ```powershell
-    Update-Database
-    ```
-*   **Via Terminal / Command Prompt:**
-    ```bash
-    dotnet ef database update
-    ```
+```powershell
+dotnet ef database update --project src/RevvUp.Infrastructure --startup-project src/RevvUp.Web
+```
 
 ### Step 5 — Run the Project
 *   Press **F5** or the **Start** button in Visual Studio.
