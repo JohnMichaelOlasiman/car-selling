@@ -176,6 +176,27 @@ To customize the SQLite database storage path, you can optionally define it in `
 
 ---
 
+## Troubleshooting
+
+### 1. "Process cannot access file... being used by another process" (Locked DLLs)
+If you try to clean, build, or rebuild the solution and see errors about locked files (e.g. `RevvUp.Infrastructure.dll`), it means a background process of `RevvUp.Web` is still running in memory. 
+
+To forcefully terminate the background server and unlock the files, run this in your terminal or Package Manager Console:
+```powershell
+Stop-Process -Name "RevvUp.Web" -Force
+```
+
+### 2. Startup Project Configuration in Visual Studio
+If the play button at the top of Visual Studio displays a class library (like `RevvUp.Application`) instead of `RevvUp.Web`, the application will not launch.
+
+To set the correct startup project:
+1. In the **Solution Explorer** pane on the right-hand side, locate `src` → **`RevvUp.Web`**.
+2. **Right-click** on the `RevvUp.Web` folder/project.
+3. Select **"Set as Startup Project"** in the context menu.
+4. The green play button at the top will now change to **`RevvUp.Web`**, allowing you to press **F5** to start the web app.
+
+---
+
 ## Known Issues
 *   None currently. If you encounter any bugs, feel free to open a new GitHub Issue!
 
@@ -183,3 +204,4 @@ To customize the SQLite database storage path, you can optionally define it in `
 
 ## License
 This repository is engineered for educational, demonstration, and professional portfolio purposes. All seeded vehicles and user credentials are safe development assets.
+
