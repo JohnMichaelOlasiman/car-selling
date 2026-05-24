@@ -24,6 +24,18 @@ namespace RevvUp.Infrastructure.Migrations
                 type: "TEXT",
                 nullable: true);
 
+            migrationBuilder.AddColumn<string>(
+                name: "SellerId",
+                table: "Cars",
+                type: "TEXT",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "SellerDisplayName",
+                table: "Cars",
+                type: "TEXT",
+                nullable: true);
+
             migrationBuilder.UpdateData(
                 table: "Cars",
                 keyColumn: "Id",
@@ -399,6 +411,14 @@ namespace RevvUp.Infrastructure.Migrations
             migrationBuilder.DropColumn(
                 name: "SellerDeletedAt",
                 table: "Inquiries");
+
+            migrationBuilder.DropColumn(
+                name: "SellerId",
+                table: "Cars");
+
+            migrationBuilder.DropColumn(
+                name: "SellerDisplayName",
+                table: "Cars");
 
             migrationBuilder.UpdateData(
                 table: "Cars",
