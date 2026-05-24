@@ -43,7 +43,7 @@ Before launching the application, ensure you have the following installed on you
 
 1.  **.NET 10 SDK** (https://dotnet.microsoft.com/download/dotnet/10.0)
     *   Required to compile and run the application.
-2.  **Visual Studio 2022** (https://visualstudio.microsoft.com/vs/) (v17.10 or later)
+2.  **Visual Studio 2026** (https://visualstudio.microsoft.com/vs/)
     *   Make sure to install the following workloads during setup:
         *   *ASP.NET and web development*
         *   *.NET desktop development*
@@ -67,7 +67,7 @@ cd RevvUp
 ```
 
 ### Step 2 — Open in Visual Studio
-*   Launch **Visual Studio 2022** (or Visual Studio Preview).
+*   Launch **Visual Studio 2026** (or Visual Studio Preview).
 *   Select **Open a project or solution**.
 *   Navigate to the cloned directory and open `RevvUp.slnx` or the project solution.
 
