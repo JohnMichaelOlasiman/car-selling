@@ -26,6 +26,7 @@ public class EfCarRepository : ICarRepository
     public async Task<IEnumerable<Car>> GetAllAsync()
     {
         return await _context.Cars
+            .AsNoTracking()
             .Where(c => c.Status == "Available")
             .OrderByDescending(c => c.DateAdded)
             .ToListAsync();
@@ -45,6 +46,7 @@ public class EfCarRepository : ICarRepository
 
         var lowerQuery = query.ToLower();
         return await _context.Cars
+            .AsNoTracking()
             .Where(c => c.Status == "Available" && (
                 c.Brand.ToLower().Contains(lowerQuery) ||
                 c.Model.ToLower().Contains(lowerQuery) ||
@@ -58,6 +60,7 @@ public class EfCarRepository : ICarRepository
     public async Task<IEnumerable<Car>> GetFeaturedAsync()
     {
         return await _context.Cars
+            .AsNoTracking()
             .Where(c => c.IsFeatured && c.Status == "Available")
             .OrderByDescending(c => c.DateAdded)
             .ToListAsync();
@@ -95,6 +98,7 @@ public class EfCarRepository : ICarRepository
     public async Task<IEnumerable<Inquiry>> GetInquiriesByUserIdAsync(string userId)
     {
         return await _context.Inquiries
+            .AsNoTracking()
             .Where(i => i.UserId == userId)
             .OrderByDescending(i => i.InquiryDate)
             .ToListAsync();
@@ -103,6 +107,24 @@ public class EfCarRepository : ICarRepository
     public async Task<Inquiry?> GetInquiryByIdAsync(Guid id)
     {
         return await _context.Inquiries.FindAsync(id);
+    }
+
+    public async Task UpdateInquiryAsync(Inquiry inquiry)
+    {
+        _context.Entry(inquiry).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteInquiryAsync(Guid id)
+    {
+        var inquiry = await _context.Inquiries.FindAsync(id);
+        if (inquiry != null)
+        {
+            var messages = _context.ChatMessages.Where(m => m.InquiryId == id);
+            _context.ChatMessages.RemoveRange(messages);
+            _context.Inquiries.Remove(inquiry);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // ── Chat Message Operations ──
@@ -115,6 +137,7 @@ public class EfCarRepository : ICarRepository
     public async Task<IEnumerable<ChatMessage>> GetChatMessagesByInquiryIdAsync(Guid inquiryId)
     {
         return await _context.ChatMessages
+            .AsNoTracking()
             .Where(m => m.InquiryId == inquiryId)
             .OrderBy(m => m.CreatedAt)
             .ToListAsync();
@@ -162,6 +185,7 @@ public class EfCarRepository : ICarRepository
     public async Task<IEnumerable<Favorite>> GetFavoritesByUserIdAsync(string userId)
     {
         return await _context.Favorites
+            .AsNoTracking()
             .Where(f => f.UserId == userId)
             .OrderByDescending(f => f.DateAdded)
             .ToListAsync();
@@ -171,5 +195,24 @@ public class EfCarRepository : ICarRepository
     {
         if (string.IsNullOrEmpty(userId)) return false;
         return await _context.Favorites.AnyAsync(f => f.UserId == userId && f.CarId == carId);
+    }
+
+    // ── Seller Operations ──
+    public async Task<IEnumerable<Car>> GetCarsBySellerIdAsync(string sellerId)
+    {
+        return await _context.Cars
+            .AsNoTracking()
+            .Where(c => c.SellerId == sellerId)
+            .OrderByDescending(c => c.DateAdded)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Inquiry>> GetInquiriesByCarIdAsync(Guid carId)
+    {
+        return await _context.Inquiries
+            .AsNoTracking()
+            .Where(i => i.CarId == carId)
+            .OrderByDescending(i => i.InquiryDate)
+            .ToListAsync();
     }
 }

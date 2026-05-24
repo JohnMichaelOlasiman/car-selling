@@ -4,7 +4,7 @@
 }
 
 <div class="pt-20 min-h-screen" x-data="revvCompare()">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="premium-container py-8">
         @* ── Header ── *@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -13,7 +13,7 @@
                 </h1>
                 <p class="text-surface-400 text-sm mt-1">Compare specifications, performance, and pricing of up to 4 vehicles.</p>
             </div>
-            <a href="/Cars/Browse" class="btn-primary btn-sm">
+            <a href="/Cars/Browse?fromCompare=true" class="btn-primary btn-sm">
                 + Add More Cars
             </a>
         </div>
@@ -29,7 +29,7 @@
                 </div>
                 <h3 class="text-2xl font-display font-bold text-white mb-2">No cars to compare</h3>
                 <p class="text-surface-400 mb-6">Go to our browsing page and click the "Add to Compare" button on any vehicle to see a side-by-side technical comparison.</p>
-                <a href="/Cars/Browse" class="btn-primary">Browse Inventory</a>
+                <a href="/Cars/Browse?fromCompare=true" class="btn-primary">Browse Inventory</a>
             </div>
         }
         else
@@ -51,9 +51,26 @@
                                             ✕
                                         </button>
 
+                                        @{
+                                            var isOwner = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) == car.SellerId;
+                                        }
                                         @* Image *@
-                                        <a href="/Cars/Details/@car.Id" class="block aspect-video rounded-xl overflow-hidden bg-surface-800 border border-surface-800/80">
-                                            <img src="@car.PrimaryImageUrl" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <a href="/Cars/Details/@car.Id" class="block aspect-video rounded-xl overflow-hidden bg-surface-800 border border-surface-800/80 relative">
+                                            <img src="@car.PrimaryImageUrl" onerror="this.onerror=null;this.src='https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            @if (car.IsSold)
+                                            {
+                                                <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center z-10">
+                                                    <span class="bg-red-600 text-white text-lg font-black px-6 py-2 rounded-full uppercase tracking-widest rotate-[-15deg]">
+                                                        SOLD
+                                                    </span>
+                                                </div>
+                                            }
+                                            @if (isOwner)
+                                            {
+                                                <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide z-10">
+                                                    Your Listing
+                                                </div>
+                                            }
                                         </a>
 
                                         @* Info *@
@@ -76,7 +93,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17M3 12h18M6 9l-3 3 3 3m12-6l3 3-3 3" />
                                             </svg>
                                         </div>
-                                        <a href="/Cars/Browse" class="text-xs text-primary-400 hover:underline">Add slot</a>
+                                        <a href="/Cars/Browse?fromCompare=true" class="text-xs text-primary-400 hover:underline">Add slot</a>
                                     </div>
                                 </th>
                             }
@@ -182,6 +199,19 @@
                             @foreach (var car in Model)
                             {
                                 <td class="p-4 text-center text-white font-medium">@car.Color</td>
+                            }
+                            @for (int i = Model.Count; i < 4; i++)
+                            {
+                                <td class="p-4 text-center text-surface-600 italic">Empty</td>
+                            }
+                        </tr>
+
+                        @* Engine *@
+                        <tr class="hover:bg-white/2 transition-colors">
+                            <td class="p-4 font-semibold text-surface-400">Engine</td>
+                            @foreach (var car in Model)
+                            {
+                                <td class="p-4 text-center text-white font-medium">@car.Engine</td>
                             }
                             @for (int i = Model.Count; i < 4; i++)
                             {

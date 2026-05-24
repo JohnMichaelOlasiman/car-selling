@@ -55,6 +55,12 @@ public class CarService : ICarService
     public async Task<Inquiry?> GetInquiryByIdAsync(Guid id)
         => await _carRepository.GetInquiryByIdAsync(id);
 
+    public async Task UpdateInquiryAsync(Inquiry inquiry)
+        => await _carRepository.UpdateInquiryAsync(inquiry);
+
+    public async Task DeleteInquiryAsync(Guid id)
+        => await _carRepository.DeleteInquiryAsync(id);
+
     // ── Chat Message Operations ──
     public async Task AddChatMessageAsync(ChatMessage message)
         => await _carRepository.AddChatMessageAsync(message);
@@ -74,4 +80,11 @@ public class CarService : ICarService
 
     public async Task<bool> IsFavoriteAsync(string userId, Guid carId)
         => await _carRepository.IsFavoriteAsync(userId, carId);
+
+    // ── Seller Operations ──
+    public async Task<IEnumerable<Car>> GetCarsBySellerIdAsync(string sellerId)
+        => await _carRepository.GetCarsBySellerIdAsync(sellerId);
+
+    public async Task<IEnumerable<Inquiry>> GetInquiriesByCarIdAsync(Guid carId)
+        => await _carRepository.GetInquiriesByCarIdAsync(carId);
 }

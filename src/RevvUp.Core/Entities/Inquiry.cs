@@ -21,4 +21,6 @@ public class Inquiry
     public string Message { get; set; } = string.Empty;
     public DateTime InquiryDate { get; set; } = DateTime.UtcNow;
     public string Status { get; set; } = "Pending"; // Pending, Contacted, Resolved
+    public bool IsDeletedBySeller { get; set; } = false;
+    public DateTime? SellerDeletedAt { get; set; }
 }

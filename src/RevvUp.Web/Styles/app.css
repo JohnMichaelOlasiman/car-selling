@@ -111,6 +111,22 @@
            hover:border-primary-500/30;
   }
 
+  /* Premium Glassmorphism Container */
+  .card-glass {
+    @apply bg-surface-900/75 backdrop-blur-xl border border-surface-800/60
+           shadow-elevated rounded-2xl;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    @apply bg-gradient-to-tr from-white/5 to-transparent pointer-events-none;
+    z-index: 0;
+  }
+
   /* Form Fields */
   .input {
     @apply w-full px-4 py-3 rounded-lg
@@ -212,3 +228,48 @@
     z-index: 1;
   }
 }
+
+/* ── PREMIUM VIEWPORT SCROLL SNAPPING ── */
+@media (min-width: 1024px) and (min-height: 800px) {
+  html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
+  .snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
+
+/* ── PREMIUM BALANCED CONTAINER (RAW CSS COMPILATION SAFEGUARD) ── */
+.premium-container {
+  width: 100% !important;
+  max-width: 1360px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1.5rem !important; /* px-6 */
+  padding-right: 1.5rem !important;
+}
+
+@media (min-width: 640px) {
+  .premium-container {
+    padding-left: 3rem !important; /* sm:px-12 */
+    padding-right: 3rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .premium-container {
+    padding-left: 5rem !important; /* lg:px-20 */
+    padding-right: 5rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .premium-container {
+    padding-left: 6rem !important; /* xl:px-24 */
+    padding-right: 6rem !important;
+  }
+}
+
+

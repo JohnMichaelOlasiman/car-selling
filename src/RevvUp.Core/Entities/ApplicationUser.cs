@@ -20,4 +20,10 @@ public class ApplicationUser : IdentityUser
     public string? Location { get; set; }
     public string? PhoneNumber2 { get; set; }
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+
+    // ── Seller Info ──
+    public string? SellerDisplayName { get; set; }
+    public string? SellerPhoneNumber { get; set; }
+    public string? SellerLocation { get; set; }
+    public string? SellerBio { get; set; }
 }

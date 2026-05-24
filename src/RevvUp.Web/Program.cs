@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // Required for Identity UI
 builder.Services.AddSignalR(); // Add SignalR support
+builder.Services.AddScoped<RevvUp.Web.Services.NotificationService>();
 
 // ── Connection string ──
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -41,6 +42,31 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
+    
+    // Register initial migration so EF doesn't try to recreate existing tables
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+            ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
+            ""ProductVersion"" TEXT NOT NULL
+        );
+        INSERT OR IGNORE INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+        VALUES ('20260522055859_AddEngineToCar', '10.0.8');
+        INSERT OR IGNORE INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+        VALUES ('20260523133350_AddSoftDeleteToInquiry', '10.0.8');
+        INSERT OR IGNORE INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+        VALUES ('20260524034031_AddSellerFields', '10.0.8');
+        INSERT OR IGNORE INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+        VALUES ('20260524065316_AddNotificationSystem', '10.0.8');
+    ");
+    
+    // Apply any new pending migrations automatically on startup
+    db.Database.Migrate();
+
+    // Create a demo seller account and reassign all 52 existing car listings to this account (Dev only)
+    if (app.Environment.IsDevelopment())
+    {
+        await DbInitializer.SeedAsync(scope.ServiceProvider);
+    }
 }
 
 // ── Configure HTTP pipeline ──
@@ -61,6 +87,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
-app.MapHub<RevvUp.Web.Hubs.NotificationHub>("/hubs/notifications");
+app.MapHub<RevvUp.Web.Hubs.NotificationHub>("/notificationHub");
 
 app.Run();

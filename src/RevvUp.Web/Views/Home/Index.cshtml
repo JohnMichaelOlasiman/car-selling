@@ -1,10 +1,64 @@
 @using RevvUp.Web.Models
 @{
     ViewData["Title"] = "Premium Automotive Marketplace";
+    ViewData["HideFooter"] = true;
 }
 
+@* ── Vertical Dot Navigator ── *@
+<div x-data="{
+         activeSection: 'hero-section',
+         sections: [
+             { id: 'hero-section', label: 'Discover' },
+             { id: 'featured-section', label: 'Featured Collections' },
+             { id: 'recent-section', label: 'Recent Inventory' },
+             { id: 'testimonials-section', label: 'Client Reviews' },
+             { id: 'cta-section', label: 'Get Started' }
+         ],
+         init() {
+             const observer = new IntersectionObserver((entries) => {
+                 entries.forEach(entry => {
+                     if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+                         this.activeSection = entry.target.id;
+                     }
+                 });
+             }, { threshold: [0.1, 0.4, 0.7], rootMargin: '-10% 0px -10% 0px' });
+             
+             this.sections.forEach(s => {
+                 const el = document.getElementById(s.id);
+                 if (el) observer.observe(el);
+             });
+         },
+         scrollTo(id) {
+             const el = document.getElementById(id);
+             if (el) {
+                 el.scrollIntoView({ behavior: 'smooth' });
+             }
+         }
+     }"
+     class="fixed right-8 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-5 p-3.5 rounded-full bg-surface-950/40 backdrop-blur-md border border-surface-800/40 shadow-elevated"
+     x-cloak>
+    
+    <template x-for="section in sections" :key="section.id">
+        <button x-on:click="scrollTo(section.id)"
+                class="group relative flex items-center justify-end w-4 h-4 rounded-full transition-all duration-300"
+                aria-label="Navigate to section">
+            
+            @* Tooltip hover text *@
+            <span class="absolute right-8 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-surface-900 border border-surface-800/60 shadow-elevated opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap">
+                <span x-text="section.label"></span>
+            </span>
+
+            @* Dot circle *@
+            <span class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                  x-bind:class="activeSection === section.id 
+                      ? 'bg-primary-500 scale-125 shadow-glow-sm' 
+                      : 'bg-surface-600 group-hover:bg-primary-400/80 group-hover:scale-110'"></span>
+        </button>
+    </template>
+</div>
+
 @* ── HERO SECTION ── *@
-<section class="relative min-h-screen flex items-center justify-center overflow-hidden py-32" id="hero-section">
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden py-16 md:py-24 xl:py-32 snap-section" id="hero-section">
     @* Background Image Layer *@
     <div class="absolute inset-0 z-0">
         <img src="/images/hero-bg.png"
@@ -21,13 +75,13 @@
     </div>
 
     @* Hero Content *@
-    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 text-center pt-16">
+    <div class="relative z-10 premium-container text-center pt-8 md:pt-12">
         @* Announcement Badge *@
-        <div class="animate-fade-in-down mb-8">
-            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/25 text-primary-400 text-xs font-semibold uppercase tracking-wider">
-                <span class="relative flex h-1.5 w-1.5">
+        <div class="animate-fade-in-down mb-6 lg:mb-8">
+            <span class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-primary-500/10 border border-primary-500/25 text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.18em]">
+                <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary-500"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                 </span>
                 The Next Generation Automotive Marketplace
             </span>
@@ -35,32 +89,32 @@
 
         @* Headline *@
         <div class="animate-fade-in-up">
-            <h1 class="text-4xl sm:text-6xl lg:text-7xl font-display font-black leading-[1.05] tracking-tight mb-6">
+            <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-[6rem] xl:text-[7.5rem] 2xl:text-[8.5rem] font-display font-black leading-[0.98] tracking-tight mb-6 lg:mb-8">
                 <span class="block text-white">Discover Extraordinary</span>
-                <span class="block text-gradient mt-1">Performance Machines</span>
+                <span class="block text-gradient mt-2">Performance Machines</span>
             </h1>
         </div>
 
         @* Subheadline *@
-        <p class="animate-fade-in-up delay-100 opacity-0 text-base sm:text-lg text-surface-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p class="animate-fade-in-up delay-100 opacity-0 text-lg sm:text-xl md:text-2xl text-surface-200 max-w-4xl mx-auto mb-8 lg:mb-12 leading-relaxed font-medium">
             Experience an elite digital showroom engineered for automotive purists. Explore verified high-performance vehicles, muscle classics, and modern supercars.
         </p>
 
         @* Search Bar *@
-        <div class="animate-fade-in-up delay-200 opacity-0 max-w-2xl mx-auto mb-12">
-            <div class="bg-surface-900 border border-surface-800 p-2 rounded-xl shadow-elevated" x-data="{ focused: false }">
-                <div class="flex flex-col sm:flex-row gap-2">
+        <div class="animate-fade-in-up delay-200 opacity-0 max-w-3xl mx-auto mb-10 lg:mb-14">
+            <div class="bg-surface-900 border border-surface-800 p-3.5 rounded-2xl shadow-elevated" x-data="{ focused: false }">
+                <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1">
-                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <svg class="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
                         <input type="text"
                                placeholder="Search brand, model, or keyword..."
-                               class="w-full pl-11 pr-4 py-3 bg-transparent border-0 text-white placeholder-surface-500 text-base focus:ring-0 focus:outline-none"
+                               class="w-full pl-14 pr-4 py-5 bg-transparent border-0 text-white placeholder-surface-500 text-xl focus:ring-0 focus:outline-none font-medium"
                                id="hero-search-input" />
                     </div>
                     <button onclick="window.location.href='/Cars/Browse?search='+document.getElementById('hero-search-input').value"
-                            class="btn-primary whitespace-nowrap" id="hero-search-btn">
+                            class="btn-primary whitespace-nowrap px-12 py-5 text-xl font-extrabold" id="hero-search-btn">
                         Search Inventory
                     </button>
                 </div>
@@ -69,170 +123,184 @@
 
         @* Trust Metrics *@
         <div class="animate-fade-in-up delay-300 opacity-0">
-            <div class="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
+            <div class="flex flex-wrap items-center justify-center gap-10 sm:gap-20">
                 <div class="text-center">
-                    <div class="text-2xl sm:text-3xl font-display font-black text-white">50+</div>
-                    <div class="text-xs text-surface-400 uppercase tracking-widest mt-1">Cars Available</div>
+                    <div class="text-5xl sm:text-6xl lg:text-7xl font-display font-black text-white">50+</div>
+                    <div class="text-base sm:text-lg text-surface-400 uppercase tracking-[0.2em] mt-3 font-extrabold">Cars Available</div>
                 </div>
-                <div class="w-px h-8 bg-surface-800/80 hidden sm:block"></div>
+                <div class="w-[1.5px] h-16 bg-surface-800 hidden sm:block"></div>
                 <div class="text-center">
-                    <div class="text-2xl sm:text-3xl font-display font-black text-white">15+</div>
-                    <div class="text-xs text-surface-400 uppercase tracking-widest mt-1">Curated Brands</div>
+                    <div class="text-5xl sm:text-6xl lg:text-7xl font-display font-black text-white">15+</div>
+                    <div class="text-base sm:text-lg text-surface-400 uppercase tracking-[0.2em] mt-3 font-extrabold">Curated Brands</div>
                 </div>
-                <div class="w-px h-8 bg-surface-800/80 hidden sm:block"></div>
+                <div class="w-[1.5px] h-16 bg-surface-800 hidden sm:block"></div>
                 <div class="text-center">
-                    <div class="text-2xl sm:text-3xl font-display font-black text-white">1,000+</div>
-                    <div class="text-xs text-surface-400 uppercase tracking-widest mt-1">Happy Buyers</div>
+                    <div class="text-5xl sm:text-6xl lg:text-7xl font-display font-black text-white">1,000+</div>
+                    <div class="text-base sm:text-lg text-surface-400 uppercase tracking-[0.2em] mt-3 font-extrabold">Happy Buyers</div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-@* ── FEATURES PREVIEW SECTION ── *@
-@* ── HOW IT WORKS SECTION ── *@
-<section class="relative py-24 sm:py-32 border-t border-surface-850" id="how-it-works">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-        @* Section Header *@
-        <div class="text-center mb-16">
-            <span class="text-primary-400 text-xs font-bold uppercase tracking-widest">Seamless Journey</span>
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mt-2 mb-4">
-                How It <span class="text-gradient">Works</span>
-            </h2>
-            <p class="text-surface-400 text-base max-w-xl mx-auto">
-                Acquiring a premium vehicle has never been this streamlined. Discover your next performance machine in four simple steps.
-            </p>
-        </div>
-
-        @* Grid *@
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8">
-            <div class="card p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
-                <div class="text-5xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors">01</div>
-                <h3 class="text-lg font-bold text-white">Browse & Discover</h3>
-                <p class="text-surface-400 text-sm leading-relaxed">
-                    Filter through 50+ professionally listed premium sports cars, hybrids, and luxury SUVs.
-                </p>
-            </div>
-            <div class="card p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
-                <div class="text-5xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors">02</div>
-                <h3 class="text-lg font-bold text-white">Compare Vehicles</h3>
-                <p class="text-surface-400 text-sm leading-relaxed">
-                    Add up to 4 models to our side-by-side technical specification comparison tool to find the perfect fit.
-                </p>
-            </div>
-            <div class="card p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
-                <div class="text-5xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors">03</div>
-                <h3 class="text-lg font-bold text-white">Inquire with Experts</h3>
-                <p class="text-surface-400 text-sm leading-relaxed">
-                    Send secure digital inquiries containing your custom details directly to our professional coordinators.
-                </p>
-            </div>
-            <div class="card p-8 space-y-4 relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300">
-                <div class="text-5xl font-display font-black text-primary-500/20 group-hover:text-primary-500/40 transition-colors">04</div>
-                <h3 class="text-lg font-bold text-white">Drive Home</h3>
-                <p class="text-surface-400 text-sm leading-relaxed">
-                    Coordinate custom paperwork and claim your curated premium vehicle from our elite partners.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
 
 @* ── FEATURED CARS SECTION ── *@
-<section class="relative py-24 bg-surface-900 border-t border-b border-surface-850" id="featured-section">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 bg-surface-900 border-t border-b border-surface-850 snap-section" id="featured-section">
+    <div class="premium-container">
         @* Header *@
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 lg:mb-14">
             <div>
-                <span class="text-primary-400 text-xs font-bold uppercase tracking-widest">Handpicked Collection</span>
-                <h2 class="text-3xl sm:text-4xl font-display font-bold text-white mt-2">
+                <span class="text-primary-400 text-xs sm:text-sm font-extrabold uppercase tracking-[0.2em] block mb-2">Handpicked Collection</span>
+                <h2 class="text-4xl sm:text-5xl font-display font-black text-white leading-tight">
                     Featured <span class="text-gradient">Masterpieces</span>
                 </h2>
             </div>
-            <a href="/Cars/Browse?sortBy=newest" class="text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 mt-4 md:mt-0 group">
+            <a href="/Cars/Browse?sortBy=newest" class="text-base font-bold text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-2 mt-4 md:mt-0 group">
                 View All Featured
-                <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
             </a>
         </div>
 
         @* Featured Grid *@
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8">
             @if (ViewBag.FeaturedCars != null)
             {
                 foreach (var car in (List<CarCardViewModel>)ViewBag.FeaturedCars)
                 {
+                    var isOwner = User.FindFirstValue(ClaimTypes.NameIdentifier) == car.SellerId;
                     <div class="car-card opacity-0 transform translate-y-8 transition-all duration-500 ease-out group" x-data="{
+                        faved: @car.IsFavoritedByCurrentUser.ToString().ToLower(),
                         id: '@car.Id',
-                        get liked() {
-                            return JSON.parse(localStorage.getItem('likedCars') || '[]').includes(this.id);
-                        },
-                        toggleLike() {
+                        async toggleFavorite() {
                             @if (User.Identity?.IsAuthenticated != true)
                             {
                                 <text>
-                                window.location.href = '/Account/Login';
+                                window.location.href = '/Account/Register';
                                 return;
                                 </text>
                             }
                             else
                             {
                                 <text>
-                                fetch(`/Cars/ToggleFavorite/${this.id}`, { method: 'POST' })
-                                    .then(res => {
-                                        if (res.status === 401) {
-                                            window.location.href = '/Account/Login';
-                                            return;
+                                // Optimistic UI toggle
+                                this.faved = !this.faved;
+                                
+                                // Dispatch toast immediately
+                                const msg = this.faved ? 'Added to Saved Cars' : 'Removed from Saved Cars';
+                                window.showToast(msg, 'success');
+
+                                // Sync with localStorage for dashboard/other pages sync
+                                let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                if (this.faved) {
+                                    if (!list.includes(this.id)) list.push(this.id);
+                                } else {
+                                    list = list.filter(item => item !== this.id);
+                                }
+                                localStorage.setItem('likedCars', JSON.stringify(list));
+                                window.dispatchEvent(new Event('storage'));
+
+                                try {
+                                    const token = document.querySelector('input[name=__RequestVerificationToken]')?.value;
+                                    const response = await fetch(`/Cars/ToggleFavorite/${this.id}`, { 
+                                        method: 'POST',
+                                        headers: { 'RequestVerificationToken': token || '' }
+                                    });
+                                    if (response.status === 401) {
+                                        // Revert state
+                                        this.faved = !this.faved;
+                                        window.showToast('Please log in to save cars.', 'error');
+                                        
+                                        // Revert localStorage
+                                        let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                        currentList = currentList.filter(item => item !== this.id);
+                                        localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                        window.dispatchEvent(new Event('storage'));
+
+                                        setTimeout(() => {
+                                            window.location.href = '/Account/Register';
+                                        }, 1000);
+                                    } else if (!response.ok) {
+                                        // Revert state
+                                        this.faved = !this.faved;
+                                        window.showToast('Failed to save. Please try again.', 'error');
+
+                                        // Revert localStorage
+                                        let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                        if (this.faved) {
+                                            if (!currentList.includes(this.id)) currentList.push(this.id);
+                                        } else {
+                                            currentList = currentList.filter(item => item !== this.id);
                                         }
-                                        return res.json();
-                                    })
-                                    .then(data => {
-                                        if (data && typeof data.favorited !== 'undefined') {
-                                            let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
-                                            if (data.favorited) {
-                                                if (!list.includes(this.id)) list.push(this.id);
-                                            } else {
-                                                list = list.filter(item => item !== this.id);
-                                            }
-                                            localStorage.setItem('likedCars', JSON.stringify(list));
-                                            window.dispatchEvent(new Event('storage'));
-                                        }
-                                    })
-                                    .catch(err => console.error(err));
+                                        localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                        window.dispatchEvent(new Event('storage'));
+                                    }
+                                } catch (err) {
+                                    // Revert state
+                                    this.faved = !this.faved;
+                                    window.showToast('A network error occurred.', 'error');
+
+                                    // Revert localStorage
+                                    let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                    if (this.faved) {
+                                        if (!currentList.includes(this.id)) currentList.push(this.id);
+                                    } else {
+                                        currentList = currentList.filter(item => item !== this.id);
+                                    }
+                                    localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                    window.dispatchEvent(new Event('storage'));
+                                }
                                 </text>
                             }
                         }
                     }">
                         <div class="card-interactive overflow-hidden">
                             @* Image *@
-                            <a href="/Cars/Details/@car.Id" class="block relative h-48 overflow-hidden bg-surface-850">
-                                <img src="@car.PrimaryImageUrl" alt="@car.FullName" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <a href="/Cars/Details/@car.Id" class="block relative h-48 sm:h-52 xl:h-56 overflow-hidden bg-surface-850">
+                                <img src="@car.PrimaryImageUrl" alt="@car.FullName" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent"></div>
-                                <div class="absolute top-3 left-3 bg-primary-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Featured</div>
-                                <div class="absolute bottom-3 left-3">
-                                    <p class="text-lg font-display font-bold text-white drop-shadow-md">@car.FormattedPrice</p>
+                                @if (car.IsSold)
+                                {
+                                    <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center z-10">
+                                        <span class="bg-red-600 text-white text-lg font-black px-6 py-2 rounded-full uppercase tracking-widest rotate-[-15deg]">
+                                            SOLD
+                                        </span>
+                                    </div>
+                                }
+                                @if (isOwner)
+                                {
+                                    <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide z-10">
+                                        Your Listing
+                                    </div>
+                                }
+                                <div class="absolute @(isOwner ? "top-11" : "top-3.5") left-3.5 bg-primary-600 text-white text-xs px-3 py-1 rounded font-extrabold uppercase tracking-wider">Featured</div>
+                                <div class="absolute bottom-3.5 left-3.5">
+                                    <p class="text-2xl sm:text-3xl font-display font-black text-white drop-shadow-md">@car.FormattedPrice</p>
                                 </div>
                             </a>
                             @* Content *@
-                            <div class="p-5">
-                                <div class="flex items-start justify-between gap-2 mb-2">
-                                    <a href="/Cars/Details/@car.Id" class="text-sm font-display font-bold text-white truncate group-hover:text-primary-400 transition-colors">@car.FullName</a>
-                                    <button x-on:click.stop.prevent="toggleLike()" class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors bg-surface-850 text-surface-500 hover:text-pink-500"
-                                            x-bind:class="liked ? 'text-pink-500 bg-pink-500/10' : ''">
-                                        <svg class="w-3.5 h-3.5" x-bind:fill="liked ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-                                        </svg>
-                                    </button>
+                            <div class="p-7">
+                                <div class="flex items-start justify-between gap-2 mb-3">
+                                    <a href="/Cars/Details/@car.Id" class="text-lg sm:text-xl font-display font-bold text-white truncate group-hover:text-primary-400 transition-colors">@car.FullName</a>
+                                    @if (!isOwner)
+                                    {
+                                        <button x-on:click.stop.prevent="toggleFavorite()" class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors bg-surface-850 hover:text-red-500"
+                                                x-bind:class="faved ? 'bg-red-500/10' : ''">
+                                            <svg class="w-4.5 h-4.5 transition-all duration-300" x-bind:class="faved ? 'fill-red-500 text-red-500' : 'fill-none text-gray-400'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                            </svg>
+                                        </button>
+                                    }
                                 </div>
-                                <div class="flex items-center gap-1.5 text-[11px] text-surface-400 mb-3">
+                                <div class="flex items-center gap-2 text-xs sm:text-sm text-surface-400 mb-4 font-semibold">
                                     <span>@car.FormattedMileage</span>
-                                    <span>•</span>
+                                    <span class="text-surface-700">•</span>
                                     <span>@car.Transmission</span>
-                                    <span>•</span>
+                                    <span class="text-surface-700">•</span>
                                     <span>@car.FuelType</span>
                                 </div>
-                                <div class="text-xs text-surface-500 line-clamp-2 leading-relaxed">@car.Description</div>
+                                <div class="text-base text-surface-300 line-clamp-2 leading-relaxed">@car.Description</div>
                             </div>
                         </div>
                     </div>
@@ -243,96 +311,158 @@
 </section>
 
 @* ── RECENTLY ADDED SECTION ── *@
-<section class="relative py-24" id="recent-section">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 snap-section" id="recent-section">
+    <div class="premium-container">
         @* Header *@
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 lg:mb-10">
             <div>
-                <span class="text-primary-400 text-xs font-bold uppercase tracking-widest">New Additions</span>
-                <h2 class="text-3xl sm:text-4xl font-display font-bold text-white mt-2">
+                <span class="text-primary-400 text-sm font-bold uppercase tracking-widest">New Additions</span>
+                <h2 class="text-4xl sm:text-5xl font-display font-bold text-white mt-2">
                     Recently <span class="text-gradient">Added Inventory</span>
                 </h2>
             </div>
-            <a href="/Cars/Browse" class="text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 mt-4 md:mt-0 group">
+            <a href="/Cars/Browse" class="text-base font-semibold text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 mt-4 md:mt-0 group">
                 View All Inventory
-                <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
             </a>
         </div>
 
         @* Recent Grid *@
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8">
             @if (ViewBag.RecentCars != null)
             {
                 foreach (var car in (List<CarCardViewModel>)ViewBag.RecentCars)
                 {
+                    var isOwner = User.FindFirstValue(ClaimTypes.NameIdentifier) == car.SellerId;
                     <div class="car-card opacity-0 transform translate-y-8 transition-all duration-500 ease-out group" x-data="{
+                        faved: @car.IsFavoritedByCurrentUser.ToString().ToLower(),
                         id: '@car.Id',
-                        get liked() {
-                            return JSON.parse(localStorage.getItem('likedCars') || '[]').includes(this.id);
-                        },
-                        toggleLike() {
+                        async toggleFavorite() {
                             @if (User.Identity?.IsAuthenticated != true)
                             {
                                 <text>
-                                window.location.href = '/Account/Login';
+                                window.location.href = '/Account/Register';
                                 return;
                                 </text>
                             }
                             else
                             {
                                 <text>
-                                fetch(`/Cars/ToggleFavorite/${this.id}`, { method: 'POST' })
-                                    .then(res => {
-                                        if (res.status === 401) {
-                                            window.location.href = '/Account/Login';
-                                            return;
+                                // Optimistic UI toggle
+                                this.faved = !this.faved;
+                                
+                                // Dispatch toast immediately
+                                const msg = this.faved ? 'Added to Saved Cars' : 'Removed from Saved Cars';
+                                window.showToast(msg, 'success');
+
+                                // Sync with localStorage for dashboard/other pages sync
+                                let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                if (this.faved) {
+                                    if (!list.includes(this.id)) list.push(this.id);
+                                } else {
+                                    list = list.filter(item => item !== this.id);
+                                }
+                                localStorage.setItem('likedCars', JSON.stringify(list));
+                                window.dispatchEvent(new Event('storage'));
+
+                                try {
+                                    const token = document.querySelector('input[name=__RequestVerificationToken]')?.value;
+                                    const response = await fetch(`/Cars/ToggleFavorite/${this.id}`, { 
+                                        method: 'POST',
+                                        headers: { 'RequestVerificationToken': token || '' }
+                                    });
+                                    if (response.status === 401) {
+                                        // Revert state
+                                        this.faved = !this.faved;
+                                        window.showToast('Please log in to save cars.', 'error');
+                                        
+                                        // Revert localStorage
+                                        let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                        currentList = currentList.filter(item => item !== this.id);
+                                        localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                        window.dispatchEvent(new Event('storage'));
+
+                                        setTimeout(() => {
+                                            window.location.href = '/Account/Register';
+                                        }, 1000);
+                                    } else if (!response.ok) {
+                                        // Revert state
+                                        this.faved = !this.faved;
+                                        window.showToast('Failed to save. Please try again.', 'error');
+
+                                        // Revert localStorage
+                                        let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                        if (this.faved) {
+                                            if (!currentList.includes(this.id)) currentList.push(this.id);
+                                        } else {
+                                            currentList = currentList.filter(item => item !== this.id);
                                         }
-                                        return res.json();
-                                    })
-                                    .then(data => {
-                                        if (data && typeof data.favorited !== 'undefined') {
-                                            let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
-                                            if (data.favorited) {
-                                                if (!list.includes(this.id)) list.push(this.id);
-                                            } else {
-                                                list = list.filter(item => item !== this.id);
-                                            }
-                                            localStorage.setItem('likedCars', JSON.stringify(list));
-                                            window.dispatchEvent(new Event('storage'));
-                                        }
-                                    })
-                                    .catch(err => console.error(err));
+                                        localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                        window.dispatchEvent(new Event('storage'));
+                                    }
+                                } catch (err) {
+                                    // Revert state
+                                    this.faved = !this.faved;
+                                    window.showToast('A network error occurred.', 'error');
+
+                                    // Revert localStorage
+                                    let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                    if (this.faved) {
+                                        if (!currentList.includes(this.id)) currentList.push(this.id);
+                                    } else {
+                                        currentList = currentList.filter(item => item !== this.id);
+                                    }
+                                    localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                    window.dispatchEvent(new Event('storage'));
+                                }
                                 </text>
                             }
                         }
                     }">
                         <div class="card-interactive overflow-hidden">
                             @* Image *@
-                            <a href="/Cars/Details/@car.Id" class="block relative h-48 overflow-hidden bg-surface-850">
-                                <img src="@car.PrimaryImageUrl" alt="@car.FullName" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <a href="/Cars/Details/@car.Id" class="block relative h-48 sm:h-52 xl:h-56 overflow-hidden bg-surface-850">
+                                <img src="@car.PrimaryImageUrl" alt="@car.FullName" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent"></div>
+                                @if (car.IsSold)
+                                {
+                                    <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center z-10">
+                                        <span class="bg-red-600 text-white text-lg font-black px-6 py-2 rounded-full uppercase tracking-widest rotate-[-15deg]">
+                                            SOLD
+                                        </span>
+                                    </div>
+                                }
+                                @if (isOwner)
+                                {
+                                    <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide z-10">
+                                        Your Listing
+                                    </div>
+                                }
                                 <div class="absolute bottom-3 left-3">
-                                    <p class="text-lg font-display font-bold text-white drop-shadow-md">@car.FormattedPrice</p>
+                                    <p class="text-xl sm:text-2xl font-display font-extrabold text-white drop-shadow-md">@car.FormattedPrice</p>
                                 </div>
                             </a>
                             @* Content *@
-                            <div class="p-5">
-                                <div class="flex items-start justify-between gap-2 mb-2">
-                                    <a href="/Cars/Details/@car.Id" class="text-sm font-display font-bold text-white truncate group-hover:text-primary-400 transition-colors">@car.FullName</a>
-                                    <button x-on:click.stop.prevent="toggleLike()" class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors bg-surface-850 text-surface-500 hover:text-pink-500"
-                                            x-bind:class="liked ? 'text-pink-500 bg-pink-500/10' : ''">
-                                        <svg class="w-3.5 h-3.5" x-bind:fill="liked ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-                                        </svg>
-                                    </button>
+                            <div class="p-6">
+                                <div class="flex items-start justify-between gap-2 mb-3">
+                                    <a href="/Cars/Details/@car.Id" class="text-base sm:text-lg font-display font-bold text-white truncate group-hover:text-primary-400 transition-colors">@car.FullName</a>
+                                    @if (!isOwner)
+                                    {
+                                        <button x-on:click.stop.prevent="toggleFavorite()" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-surface-850 hover:text-red-500"
+                                                x-bind:class="faved ? 'bg-red-500/10' : ''">
+                                            <svg class="w-4 h-4 transition-all duration-300" x-bind:class="faved ? 'fill-red-500 text-red-500' : 'fill-none text-gray-400'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                            </svg>
+                                        </button>
+                                    }
                                 </div>
-                                <div class="flex items-center gap-1.5 text-[11px] text-surface-400">
+                                <div class="flex items-center gap-2 text-xs sm:text-sm text-surface-400 font-medium">
                                     <span>@car.FormattedMileage</span>
-                                    <span>•</span>
+                                    <span class="text-surface-700">•</span>
                                     <span>@car.Transmission</span>
-                                    <span>•</span>
+                                    <span class="text-surface-700">•</span>
                                     <span>@car.FuelType</span>
                                 </div>
                             </div>
@@ -344,61 +474,60 @@
     </div>
 </section>
 
-@* ── CTA BANNER ── *@
 @* ── TESTIMONIALS SECTION ── *@
-<section class="relative py-24 bg-surface-900 border-t border-surface-850" id="testimonials-section">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+<section class="relative min-h-screen flex flex-col justify-center py-12 md:py-16 xl:py-20 bg-surface-900 border-t border-surface-850 snap-section" id="testimonials-section">
+    <div class="premium-container">
         @* Section Header *@
-        <div class="text-center mb-16">
-            <span class="text-primary-400 text-xs font-bold uppercase tracking-widest">Client Reviews</span>
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mt-2 mb-4">
+        <div class="text-center mb-10 lg:mb-14">
+            <span class="text-primary-400 text-sm font-bold uppercase tracking-widest">Client Reviews</span>
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-white mt-2 mb-4">
                 What Our <span class="text-gradient">Buyers Say</span>
             </h2>
-            <p class="text-surface-400 text-base max-w-xl mx-auto">
+            <p class="text-surface-400 text-lg max-w-2xl mx-auto">
                 Discover the unmatched convenience and security of buying through the RevvUp digital platform.
             </p>
         </div>
 
         @* Testimonials Grid *@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            <div class="card p-8 space-y-4 hover:border-primary-500/30 transition-all duration-300 flex flex-col justify-between">
-                <p class="text-surface-300 text-sm leading-relaxed italic">
+            <div class="card-glass p-8 space-y-4 hover:border-primary-500/30 transition-all duration-300 flex flex-col justify-between">
+                <p class="text-surface-300 text-base sm:text-lg leading-relaxed italic">
                     "Finding my Porsche 911 through RevvUp was a dream. The side-by-side technical specs tool made comparing options so simple, and the dealer inquiry was answered in minutes. Highly recommended!"
                 </p>
                 <div class="flex items-center gap-3 pt-4 border-t border-surface-800/50">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-xs font-bold text-white">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-sm font-bold text-white">
                         HS
                     </div>
                     <div>
-                        <h4 class="text-sm font-semibold text-white">Harvey Specter</h4>
+                        <h4 class="text-base font-bold text-white">Harvey Specter</h4>
                         <p class="text-xs text-surface-500">Corporate Attorney</p>
                     </div>
                 </div>
             </div>
-            <div class="card p-8 space-y-4 hover:border-primary-500/30 transition-all duration-300 flex flex-col justify-between">
-                <p class="text-surface-300 text-sm leading-relaxed italic">
+            <div class="card-glass p-8 space-y-4 hover:border-primary-500/30 transition-all duration-300 flex flex-col justify-between">
+                <p class="text-surface-300 text-base sm:text-lg leading-relaxed italic">
                     "The premium showroom vibe of this site is outstanding. The placeholder images were professional, and the inquiry system connects you to actual dealer coordinators. Got my Model S seamlessly!"
                 </p>
                 <div class="flex items-center gap-3 pt-4 border-t border-surface-800/50">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-primary-500 flex items-center justify-center text-xs font-bold text-white">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent-500 to-primary-500 flex items-center justify-center text-sm font-bold text-white">
                         EL
                     </div>
                     <div>
-                        <h4 class="text-sm font-semibold text-white">Elena Lewis</h4>
+                        <h4 class="text-base font-bold text-white">Elena Lewis</h4>
                         <p class="text-xs text-surface-500">Tech Entrepreneur</p>
                     </div>
                 </div>
             </div>
-            <div class="card p-8 space-y-4 hover:border-primary-500/30 transition-all duration-300 flex flex-col justify-between">
-                <p class="text-surface-300 text-sm leading-relaxed italic">
+            <div class="card-glass p-8 space-y-4 hover:border-primary-500/30 transition-all duration-300 flex flex-col justify-between">
+                <p class="text-surface-300 text-base sm:text-lg leading-relaxed italic">
                     "I was skeptical about buying an expensive muscle classic online, but the verified specs and easy inquiries gave me full confidence. The EMI calculator was incredibly accurate too!"
                 </p>
                 <div class="flex items-center gap-3 pt-4 border-t border-surface-800/50">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center text-xs font-bold text-white">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center text-sm font-bold text-white">
                         MC
                     </div>
                     <div>
-                        <h4 class="text-sm font-semibold text-white">Marcus Cole</h4>
+                        <h4 class="text-base font-bold text-white">Marcus Cole</h4>
                         <p class="text-xs text-surface-500">Classic Car Collector</p>
                     </div>
                 </div>
@@ -407,46 +536,228 @@
     </div>
 </section>
 
-@* ── CTA BANNER ── *@
-<section class="relative py-24 border-t border-surface-850" id="cta-section">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-        <div class="relative card p-12 sm:p-16 text-center overflow-hidden">
-            <div class="absolute top-0 left-1/4 w-80 h-80 bg-primary-500/5 rounded-full blur-3xl"></div>
+@* ── CTA BANNER & INTEGRATED FOOTER ── *@
+<section class="relative min-h-screen flex flex-col justify-between pt-16 pb-8 border-t border-surface-850 bg-surface-950 overflow-hidden snap-section" id="cta-section">
+    @* Subtle Background Orbs *@
+    <div class="absolute top-0 left-1/4 w-80 h-80 bg-primary-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent pointer-events-none"></div>
+
+    <div></div> @* Spacer to push main content to center *@
+
+    <div class="premium-container relative z-10 my-auto">
+        <div class="relative card-glass p-10 sm:p-14 text-center overflow-hidden">
             <div class="relative z-10">
-                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-4">
+                <h2 class="text-3xl sm:text-5xl lg:text-6xl font-display font-bold text-white mb-4">
                     Ready to Find Your <span class="text-gradient">Next Masterpiece?</span>
                 </h2>
-                <p class="text-surface-400 text-base max-w-lg mx-auto mb-8 leading-relaxed">
+                <p class="text-surface-400 text-base sm:text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
                     Join thousands of high-performance car collectors who utilize RevvUp daily to browse, compare, and inquire about premium vehicles.
                 </p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/Cars/Browse" class="btn-primary w-full sm:w-auto justify-center">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
+                    <a href="/Cars/Browse" class="btn-primary w-full sm:w-auto justify-center text-base py-3.5 px-8">
                         Start Browsing
                     </a>
-                    <a href="/Cars/Browse?sortBy=price-high" class="btn-outline w-full sm:w-auto justify-center">
+                    <a href="/Cars/Browse?sortBy=price-high" class="btn-outline w-full sm:w-auto justify-center text-base py-3.5 px-8">
                         Compare Top Models
                     </a>
                 </div>
             </div>
         </div>
     </div>
+
+    @* ── INTEGRATED FOOTER ── *@
+    <footer class="w-full relative z-10 mt-12">
+        <div class="premium-container">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                @* ── Brand Column ── *@
+                <div>
+                    <a href="/" class="inline-flex items-center gap-3 group mb-4">
+                        <div class="w-9 h-9 rounded-xl bg-surface-900/50 border border-surface-800/40 p-1.5 flex items-center justify-center shadow-glow-sm group-hover:shadow-glow transition-all duration-500">
+                            <img src="/images/logo.png" class="w-full h-full object-contain" alt="RevvUp Logo" />
+                        </div>
+                        <span class="text-xl font-display font-bold text-white">
+                            Revv<span class="text-gradient">Up</span>
+                        </span>
+                    </a>
+                    <p class="text-surface-400 text-sm leading-relaxed mb-4 max-w-sm">
+                        Premium automotive platform for curated car browsing and discovery.
+                    </p>
+                    <div class="flex gap-2">
+                        <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="Twitter">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="Instagram">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-surface-800/80 flex items-center justify-center text-surface-400 hover:text-white hover:bg-primary-600 transition-all" aria-label="YouTube">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                @* ── Quick Links ── *@
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Explore</h4>
+                    <ul class="space-y-2 text-sm text-surface-400">
+                        <li><a href="/Cars/Browse" class="hover:text-primary-400 transition-colors">Browse All Cars</a></li>
+                        <li><a href="/Cars/Browse?sortBy=newest" class="hover:text-primary-400 transition-colors">New Arrivals</a></li>
+                        <li><a href="/Cars/Browse?fuelType=Electric" class="hover:text-primary-400 transition-colors">Electric Vehicles</a></li>
+                        <li><a href="/Cars/Browse?bodyType=Coupe" class="hover:text-primary-400 transition-colors">Luxury Collection</a></li>
+                    </ul>
+                </div>
+
+                @* ── Buyer Tools ── *@
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Buyer Tools</h4>
+                    <ul class="space-y-2 text-sm text-surface-400">
+                        <li><a href="/Cars/Browse" class="hover:text-primary-400 transition-colors">Car Finder</a></li>
+                        <li><a href="/Cars/Compare" class="hover:text-primary-400 transition-colors">Compare Tool</a></li>
+                        <li><a href="/Dashboard/SavedCars" class="hover:text-primary-400 transition-colors">Saved Wishlist</a></li>
+                        <li><a href="/Dashboard/Messages" class="hover:text-primary-400 transition-colors">Inquiry Desk</a></li>
+                    </ul>
+                </div>
+
+                @* ── Company ── *@
+                <div>
+                    <h4 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm text-surface-400">
+                        <li><a href="/Home/About" class="hover:text-primary-400 transition-colors">About RevvUp</a></li>
+                        <li><a href="/Home/About#how-it-works" class="hover:text-primary-400 transition-colors">How It Works</a></li>
+                        <li><a href="#" class="hover:text-primary-400 transition-colors">Careers</a></li>
+                        <li><a href="#" class="hover:text-primary-400 transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            @* ── Bottom Bar ── *@
+            <div class="divider my-6"></div>
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-surface-500">
+                <p>&copy; @DateTime.Now.Year RevvUp. All rights reserved. Built with <span class="text-accent-500">♥</span></p>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-surface-350 transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-surface-350 transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </section>
 
 @section Scripts {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const observer = new IntersectionObserver((entries) => {
+    // ── Car Card Reveal Animation ──
+    const cardObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry, i) => {
             if (entry.isIntersecting) {
                 entry.target.style.transitionDelay = `${(i % 4) * 50}ms`;
                 entry.target.classList.remove('opacity-0', 'translate-y-8');
                 entry.target.classList.add('opacity-100', 'translate-y-0');
-                observer.unobserve(entry.target);
+                cardObserver.unobserve(entry.target);
             }
         });
     }, { threshold: 0.05 });
 
-    document.querySelectorAll('.car-card').forEach(card => observer.observe(card));
+    document.querySelectorAll('.car-card').forEach(card => cardObserver.observe(card));
+
+    // ── Snappy Flick Scroll Manager ──
+    const sectionIds = ['hero-section', 'featured-section', 'recent-section', 'testimonials-section', 'cta-section'];
+    let currentIdx = 0;
+    let isLocked = false;
+    const cooldown = 900; // ms transition lock
+
+    // Helper to snap to section by index
+    function snapTo(index) {
+        if (index < 0 || index >= sectionIds.length) return;
+        const el = document.getElementById(sectionIds[index]);
+        if (el) {
+            isLocked = true;
+            currentIdx = index;
+            el.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => { isLocked = false; }, cooldown);
+        }
+    }
+
+    // Sync section index with window scrolling (e.g. from dot clicks or manual scroll)
+    const syncObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+                const idx = sectionIds.indexOf(entry.target.id);
+                if (idx !== -1 && !isLocked) {
+                    currentIdx = idx;
+                }
+            }
+        });
+    }, { threshold: [0.1, 0.4, 0.7], rootMargin: '-10% 0px -10% 0px' });
+
+    sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) syncObserver.observe(el);
+    });
+
+    // Capture Wheel Gestures
+    window.addEventListener('wheel', (e) => {
+        // Only active on desktop/large viewport sizes
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        
+        // Prevent default browser continuous scroll jumpiness
+        e.preventDefault();
+        
+        if (isLocked) return;
+        
+        if (e.deltaY > 15) {
+            // Flick down
+            if (currentIdx < sectionIds.length - 1) {
+                snapTo(currentIdx + 1);
+            }
+        } else if (e.deltaY < -15) {
+            // Flick up
+            if (currentIdx > 0) {
+                snapTo(currentIdx - 1);
+            }
+        }
+    }, { passive: false });
+
+    // Capture Keyboard Clicks
+    window.addEventListener('keydown', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        
+        if (['ArrowDown', 'PageDown'].includes(e.key)) {
+            e.preventDefault();
+            if (currentIdx < sectionIds.length - 1) snapTo(currentIdx + 1);
+        } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
+            e.preventDefault();
+            if (currentIdx > 0) snapTo(currentIdx - 1);
+        } else if (e.key === 'Home') {
+            e.preventDefault();
+            snapTo(0);
+        } else if (e.key === 'End') {
+            e.preventDefault();
+            snapTo(sectionIds.length - 1);
+        }
+    });
+
+    // Capture Swipes for touch laptops/tablets
+    let startY = 0;
+    window.addEventListener('touchstart', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (window.innerWidth < 1024 || window.innerHeight < 800) return;
+        if (isLocked) return;
+        
+        const endY = e.touches[0].clientY;
+        const diff = startY - endY;
+        
+        if (Math.abs(diff) > 60) {
+            if (diff > 0) {
+                if (currentIdx < sectionIds.length - 1) snapTo(currentIdx + 1);
+            } else {
+                if (currentIdx > 0) snapTo(currentIdx - 1);
+            }
+        }
+    }, { passive: true });
 });
 </script>
 }

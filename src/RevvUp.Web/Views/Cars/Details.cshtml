@@ -5,13 +5,16 @@
 @{
     ViewData["Title"] = Model.FullName;
     var currentUser = User.Identity?.IsAuthenticated == true ? await UserManager.GetUserAsync(User) : null;
-    var currentUserName = currentUser?.DisplayName ?? "";
+    var currentUserName  = currentUser?.DisplayName ?? "";
     var currentUserEmail = currentUser?.Email ?? "";
     var currentUserPhone = currentUser?.PhoneNumber ?? "";
+    var currentUserId    = currentUser?.Id ?? "";
+    var carSellerId      = ViewBag.CarSellerId as string ?? string.Empty;
+    bool isOwner         = !string.IsNullOrEmpty(currentUserId) && currentUserId == carSellerId;
 }
 
 <div class="pt-20 min-h-screen bg-surface-950 text-surface-200" x-data="revvDetails('@Model.Price', '@Model.Id')">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+    <div class="premium-container py-8">
         @* ── Breadcrumb ── *@
         <nav class="flex items-center gap-2 text-xs text-surface-500 mb-6 uppercase tracking-wider font-semibold">
             <a href="/" class="hover:text-white transition-colors">Home</a>
@@ -31,6 +34,12 @@
                         <span class="px-3 py-1 rounded bg-red-500 text-white text-xs font-black tracking-wider shadow-glow-sm">SOLD</span>
                     }
                 </div>
+                @if (Model.IsSold)
+                {
+                    <div class="flex items-center gap-2 bg-red-900/40 border border-red-600 text-red-400 px-4 py-2 rounded-lg text-sm font-semibold mt-2">
+                        This vehicle has already been sold and is no longer available.
+                    </div>
+                }
                 <div class="flex flex-wrap items-center gap-3 mt-3 text-xs uppercase tracking-wider font-bold">
                     <span class="badge-primary">@Model.Year</span>
                     <span class="badge-accent">@Model.BodyType</span>
@@ -60,16 +69,17 @@
                     @* Gallery View *@
                     <div class="relative aspect-video bg-surface-950">
                         <img x-bind:src="activeGalleryImage" alt="Car Showcase"
+                             onerror="this.onerror=null;this.src='https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image'"
                              class="w-full h-full object-cover transition-all duration-300 animate-fade-in" />
                         <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent pointer-events-none"></div>
-
+ 
                         @* Thumbnail Strips *@
                         <div class="absolute bottom-4 left-4 right-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
                             <template x-for="(img, index) in galleryImages" :key="index">
                                 <button x-on:click="activeGalleryImage = img"
                                         class="w-20 h-14 rounded overflow-hidden border-2 flex-shrink-0 transition-all duration-200"
                                         x-bind:class="activeGalleryImage === img ? 'border-primary-500 scale-105 shadow-md' : 'border-surface-850 opacity-60 hover:opacity-100'">
-                                    <img x-bind:src="img" class="w-full h-full object-cover" />
+                                    <img x-bind:src="img" onerror="this.onerror=null;this.src='https://placehold.co/800x600/1a1f2e/3b82f6?text=No+Image'" class="w-full h-full object-cover" />
                                 </button>
                             </template>
                         </div>
@@ -144,6 +154,10 @@
                                 <span class="text-surface-500 font-medium">Color</span>
                                 <span class="text-white font-semibold">@Model.Color</span>
                             </div>
+                            <div class="flex items-center justify-between py-2 border-b border-surface-850 text-sm">
+                                <span class="text-surface-500 font-medium">Engine Specs</span>
+                                <span class="text-white font-semibold">@Model.Engine</span>
+                            </div>
                         </div>
                     </div>
 
@@ -172,44 +186,139 @@
 
             @* ── Column 3: Actions Console & EMI Calculator ── *@
             <div class="space-y-8">
-                @* Actions Console Card *@
-                <div class="card p-6 space-y-4">
-                    <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                        <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-                        </svg>
-                        Inquiry Desk
-                    </h3>
-                    <div class="space-y-3">
-                        @* ── Send Inquiry Button ── *@
-                        <button x-on:click="contactModalOpen = true"
-                                class="btn-primary w-full justify-center py-3 font-semibold text-sm transition-transform active:scale-95 duration-200"
-                                id="details-contact-btn">
-                            Send Inquiry
-                        </button>
-
-                        @* ── Save Favorites Button ── *@
-                        <button x-on:click="toggleWishlist()"
-                                class="w-full justify-center transition-all duration-200 py-2.5 text-xs flex items-center gap-2 font-bold uppercase tracking-wider"
-                                x-bind:class="isLiked ? 'btn bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'btn-outline border-surface-800 hover:border-surface-700 text-surface-400 hover:text-white'">
-                            <svg class="w-4 h-4" x-bind:class="isLiked ? 'fill-current text-pink-400' : 'text-surface-400 group-hover:text-white'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                @if (isOwner)
+                {
+                    @* Owner Actions Console Panel *@
+                    <div class="card p-6 space-y-4">
+                        <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527a1.125 1.125 0 0 1-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.527-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
-                            <span x-text="isLiked ? 'Saved' : 'Save to Favorites'"></span>
-                        </button>
+                            Owner Console
+                        </h3>
+                        <div class="space-y-3">
+                            <p class="text-xs text-primary-400 font-semibold uppercase tracking-widest font-display">Your Curated Listing</p>
+                            <a href="/Seller/Edit/@Model.Id"
+                               class="block w-full text-center bg-primary-600 hover:bg-primary-500 hover:shadow-glow-sm shadow-primary-600/20 text-white font-semibold py-2.5 rounded-xl transition duration-300 text-xs uppercase tracking-wider">
+                                Edit Listing
+                            </a>
+                            <a href="/Dashboard/Messages?listingId=@Model.Id&tab=seller"
+                               class="block w-full text-center border border-surface-700 hover:border-primary-500/50 hover:bg-primary-500/5 text-surface-300 hover:text-white font-semibold py-2.5 rounded-xl transition duration-300 text-xs uppercase tracking-wider">
+                                View Inquiries
+                            </a>
+                            <div x-data="{ showSoldModal: false }" class="block w-full">
+                                @* Trigger Button *@
+                                <button type="button"
+                                        @@click="showSoldModal = true"
+                                        class="block w-full text-center border border-surface-700 hover:border-yellow-500/50 hover:bg-yellow-500/5 text-surface-300 hover:text-yellow-400 font-semibold py-2.5 rounded-xl transition duration-300 text-xs uppercase tracking-wider">
+                                    Mark as Sold
+                                </button>
 
-                        @* ── Compare Button ── *@
-                        <button x-on:click="toggleComparison()"
-                                class="w-full btn-outline justify-center transition-all duration-200 py-2.5 text-xs flex items-center gap-2 font-bold uppercase tracking-wider"
-                                x-bind:class="isInComparison ? 'border-primary-500 text-primary-400 bg-primary-500/5' : 'border-surface-800 hover:border-surface-700 text-surface-400 hover:text-white'"
-                                id="details-compare-btn">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                            </svg>
-                            <span x-text="isInComparison ? 'Added to Compare' : 'Compare Specifications'"></span>
-                        </button>
+                                <template x-teleport="body">
+                                    <div>
+                                        @* Modal Box Container *@
+                                        <div x-show="showSoldModal" 
+                                             @@click.self="showSoldModal = false"
+                                             class="fixed inset-0 z-[9999] flex items-center justify-center p-4" 
+                                             x-cloak>
+                                            <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-2xl relative z-[10000]">
+                                                <h2 class="text-white font-bold text-lg mb-2">Mark as Sold</h2>
+                                                <p class="text-gray-400 text-sm mb-6">Are you sure you want to mark this car as sold? This will change its status to Sold.</p>
+                                                <div class="flex gap-3">
+                                                    <button type="button" 
+                                                            @@click="showSoldModal = false"
+                                                            class="flex-1 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 transition text-sm">
+                                                        Cancel
+                                                    </button>
+                                                    <form method="post" action="/Seller/MarkSold/@Model.Id" class="flex-grow">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" 
+                                                                class="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition text-sm">
+                                                            Mark Sold
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @* Backdrop Overlay (behind modal) *@
+                                        <div x-show="showSoldModal"
+                                             @@click="showSoldModal = false"
+                                             class="fixed inset-0 bg-black/60 z-[9998]" 
+                                             x-cloak>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                }
+                else
+                {
+                    @* Actions Console Card *@
+                    <div class="card p-6 space-y-4">
+                        <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                            </svg>
+                            Inquiry Desk
+                        </h3>
+                        <div class="space-y-3">
+                            @* ── Send Inquiry Button ── *@
+                            @if (Model.IsSold)
+                            {
+                                <button disabled
+                                        class="w-full justify-center py-3 font-semibold text-sm bg-surface-800 text-surface-500 cursor-not-allowed border border-surface-700/50 rounded-xl"
+                                        id="details-contact-btn">
+                                    Send Inquiry
+                                </button>
+                            }
+                            else
+                            {
+                                <button x-on:click="contactModalOpen = true"
+                                        class="btn-primary w-full justify-center py-3 font-semibold text-sm transition-transform active:scale-95 duration-200"
+                                        id="details-contact-btn">
+                                    Send Inquiry
+                                </button>
+                            }
+
+                            @* ── Save Favorites Button ── *@
+                            @if (Model.IsSold)
+                            {
+                                <button disabled
+                                        class="w-full justify-center py-2.5 text-xs flex items-center gap-2 font-bold uppercase tracking-wider bg-surface-800/50 text-surface-600 border border-surface-850 cursor-not-allowed">
+                                    <svg class="w-4 h-4 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                    </svg>
+                                    <span>Save to Favorites</span>
+                                </button>
+                            }
+                            else
+                            {
+                                <button x-on:click="toggleWishlist()"
+                                        class="w-full justify-center transition-all duration-200 py-2.5 text-xs flex items-center gap-2 font-bold uppercase tracking-wider"
+                                        x-bind:class="isLiked ? 'btn bg-red-500/10 text-red-400 border border-red-500/20' : 'btn-outline border-surface-800 hover:border-surface-700 text-surface-400 hover:text-white'">
+                                    <svg class="w-4 h-4 transition-all duration-300" x-bind:class="isLiked ? 'fill-red-500 text-red-500' : 'text-surface-400 group-hover:text-white'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                    </svg>
+                                    <span x-text="isLiked ? 'Saved' : 'Save to Favorites'"></span>
+                                </button>
+                            }
+
+                            @* ── Compare Button ── *@
+                            <button x-on:click="toggleComparison()"
+                                    class="w-full btn-outline justify-center transition-all duration-200 py-2.5 text-xs flex items-center gap-2 font-bold uppercase tracking-wider"
+                                    x-bind:class="isInComparison ? 'border-primary-500 text-primary-400 bg-primary-500/5' : 'border-surface-800 hover:border-surface-700 text-surface-400 hover:text-white'"
+                                    id="details-compare-btn">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                                </svg>
+                                <span x-text="isInComparison ? 'Added to Compare' : 'Compare Specifications'"></span>
+                            </button>
+                        </div>
+                    </div>
+                }
 
                 @* Animated EMI Calculator *@
                 <div class="card p-6 space-y-5 relative overflow-hidden">
@@ -275,35 +384,88 @@
                     {
                         <div class="card overflow-hidden hover:shadow-card-hover hover:-translate-y-1 hover:border-primary-500/30 transition-all duration-300 ease-out group relative"
                              x-data="{ 
+                                faved: @car.IsFavoritedByCurrentUser.ToString().ToLower(),
                                 id: '@car.Id',
-                                get liked() {
-                                    return JSON.parse(localStorage.getItem('likedCars') || '[]').includes(this.id);
-                                },
-                                toggleLike() {
+                                async toggleFavorite() {
                                     @if (User.Identity?.IsAuthenticated != true)
                                     {
                                         <text>
-                                        window.location.href = '/Account/Login';
+                                        window.location.href = '/Account/Register';
                                         return;
                                         </text>
                                     }
                                     else
                                     {
                                         <text>
-                                        fetch(`/Cars/ToggleFavorite/${this.id}`, { method: 'POST' })
-                                            .then(res => res.json())
-                                            .then(data => {
-                                                if (data && typeof data.favorited !== 'undefined') {
-                                                    let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
-                                                    if (data.favorited) {
-                                                        if (!list.includes(this.id)) list.push(this.id);
-                                                    } else {
-                                                        list = list.filter(item => item !== this.id);
-                                                    }
-                                                    localStorage.setItem('likedCars', JSON.stringify(list));
-                                                    window.dispatchEvent(new Event('storage'));
+                                        // Optimistic UI toggle
+                                        this.faved = !this.faved;
+                                        
+                                        // Dispatch toast immediately
+                                        const msg = this.faved ? 'Added to Saved Cars' : 'Removed from Saved Cars';
+                                        window.showToast(msg, 'success');
+
+                                        // Sync with localStorage for dashboard/other pages sync
+                                        let list = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                        if (this.faved) {
+                                            if (!list.includes(this.id)) list.push(this.id);
+                                        } else {
+                                            list = list.filter(item => item !== this.id);
+                                        }
+                                        localStorage.setItem('likedCars', JSON.stringify(list));
+                                        window.dispatchEvent(new Event('storage'));
+
+                                        try {
+                                            const token = document.querySelector('input[name=__RequestVerificationToken]')?.value;
+                                            const response = await fetch(`/Cars/ToggleFavorite/${this.id}`, { 
+                                                method: 'POST',
+                                                headers: {
+                                                    'RequestVerificationToken': token || ''
                                                 }
                                             });
+                                            if (response.status === 401) {
+                                                // Revert state
+                                                this.faved = !this.faved;
+                                                window.showToast('Please log in to save cars.', 'error');
+                                                
+                                                // Revert localStorage
+                                                let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                                currentList = currentList.filter(item => item !== this.id);
+                                                localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                                window.dispatchEvent(new Event('storage'));
+
+                                                setTimeout(() => {
+                                                    window.location.href = '/Account/Register';
+                                                }, 1000);
+                                            } else if (!response.ok) {
+                                                // Revert state
+                                                this.faved = !this.faved;
+                                                window.showToast('Failed to save. Please try again.', 'error');
+
+                                                // Revert localStorage
+                                                let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                                if (this.faved) {
+                                                    if (!currentList.includes(this.id)) currentList.push(this.id);
+                                                } else {
+                                                    currentList = currentList.filter(item => item !== this.id);
+                                                }
+                                                localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                                window.dispatchEvent(new Event('storage'));
+                                            }
+                                        } catch (err) {
+                                            // Revert state
+                                            this.faved = !this.faved;
+                                            window.showToast('A network error occurred.', 'error');
+
+                                            // Revert localStorage
+                                            let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                                            if (this.faved) {
+                                                if (!currentList.includes(this.id)) currentList.push(this.id);
+                                            } else {
+                                                currentList = currentList.filter(item => item !== this.id);
+                                            }
+                                            localStorage.setItem('likedCars', JSON.stringify(currentList));
+                                            window.dispatchEvent(new Event('storage'));
+                                        }
                                         </text>
                                     }
                                 }
@@ -311,6 +473,23 @@
                             <a href="/Cars/Details/@car.Id" class="block relative h-48 overflow-hidden bg-surface-850">
                                 <img src="@car.PrimaryImageUrl" alt="@car.FullName" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent"></div>
+                                @{
+                                    var isSimilarCarOwner = User.FindFirstValue(ClaimTypes.NameIdentifier) == car.SellerId;
+                                }
+                                @if (car.IsSold)
+                                {
+                                    <div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center z-10">
+                                        <span class="bg-red-600 text-white text-lg font-black px-6 py-2 rounded-full uppercase tracking-widest rotate-[-15deg]">
+                                            SOLD
+                                        </span>
+                                    </div>
+                                }
+                                @if (isSimilarCarOwner)
+                                {
+                                    <div class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide z-10">
+                                        Your Listing
+                                    </div>
+                                }
                                 <div class="absolute bottom-3 left-3">
                                     <p class="text-base font-display font-bold text-white drop-shadow-md">@car.FormattedPrice</p>
                                 </div>
@@ -318,11 +497,15 @@
                             <div class="p-5">
                                 <div class="flex items-start justify-between gap-2 mb-2">
                                     <a href="/Cars/Details/@car.Id" class="text-sm font-display font-bold text-white truncate group-hover:text-primary-400 transition-colors">@car.FullName</a>
-                                    <button x-on:click="toggleLike()" class="text-surface-500 hover:text-pink-500 transition-colors">
-                                        <svg class="w-5 h-5" x-bind:class="liked ? 'fill-current text-pink-500' : 'stroke-current text-surface-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-                                        </svg>
-                                    </button>
+                                    @if (!isSimilarCarOwner)
+                                    {
+                                        <button x-on:click.stop.prevent="toggleFavorite()" class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-surface-850 hover:text-red-500"
+                                                x-bind:class="faved ? 'bg-red-500/10' : ''">
+                                            <svg class="w-5 h-5 transition-all duration-300" x-bind:class="faved ? 'fill-red-500 text-red-500' : 'fill-none text-gray-400'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                            </svg>
+                                        </button>
+                                    }
                                 </div>
                                 <div class="flex items-center gap-1.5 text-[11px] text-surface-400">
                                     <span>@car.FormattedMileage</span>
@@ -404,7 +587,7 @@ function revvDetails(carPriceStr, carId) {
     return {
         activeGalleryImage: '@Model.PrimaryImageUrl',
         galleryImages: [
-            @Html.Raw(string.Join(",", Model.ImageUrls.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(img => $"'{img}'")))
+            @Html.Raw(string.Join(",", (Model.ImageUrls ?? string.Empty).Split(';', StringSplitOptions.RemoveEmptyEntries).Select(img => $"'{img}'")))
         ],
         infoTabs: [
             { id: 'overview', name: 'Overview' },
@@ -433,7 +616,7 @@ function revvDetails(carPriceStr, carId) {
         downPaymentPercentage: 20,
         loanTenureMonths: 36,
         interestRate: 7.5,
-        monthlyEMI: '$0',
+        monthlyEMI: '₱0',
         loanAmount: '0',
 
         init() {
@@ -444,43 +627,96 @@ function revvDetails(carPriceStr, carId) {
 
         // ── Wishlist Operations ──
         checkWishlist() {
+            this.isLiked = @Model.IsFavoritedByCurrentUser.ToString().ToLower();
+            
+            // Still sync with localStorage in case other pages/layout require it
             let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
-            this.isLiked = likedIds.includes(carId);
+            if (this.isLiked && !likedIds.includes(carId)) {
+                likedIds.push(carId);
+                localStorage.setItem('likedCars', JSON.stringify(likedIds));
+                window.dispatchEvent(new Event('storage'));
+            } else if (!this.isLiked && likedIds.includes(carId)) {
+                likedIds = likedIds.filter(id => id !== carId);
+                localStorage.setItem('likedCars', JSON.stringify(likedIds));
+                window.dispatchEvent(new Event('storage'));
+            }
         },
-        toggleWishlist() {
+        async toggleWishlist() {
             @if (User.Identity?.IsAuthenticated != true)
             {
                 <text>
-                window.location.href = '/Account/Login';
+                window.location.href = '/Account/Register';
                 return;
                 </text>
             }
             else
             {
                 <text>
-                fetch(`/Cars/ToggleFavorite/${carId}`, { method: 'POST' })
-                    .then(res => {
-                        if (res.status === 401) {
-                            window.location.href = '/Account/Login';
-                            return;
+                // Optimistic UI toggle
+                this.isLiked = !this.isLiked;
+
+                // Dispatch toast immediately
+                window.showToast(this.isLiked ? 'Added to Saved Cars' : 'Removed from Saved Cars', 'success');
+
+                // Sync with localStorage
+                let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                if (this.isLiked) {
+                    if (!likedIds.includes(carId)) likedIds.push(carId);
+                } else {
+                    likedIds = likedIds.filter(id => id !== carId);
+                }
+                localStorage.setItem('likedCars', JSON.stringify(likedIds));
+                window.dispatchEvent(new Event('storage'));
+
+                try {
+                    const token = document.querySelector("input[name='__RequestVerificationToken']")?.value;
+                    const response = await fetch(`/Cars/ToggleFavorite/${carId}`, { 
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token || ''
                         }
-                        return res.json();
-                    })
-                    .then(data => {
-                        if (data && typeof data.favorited !== 'undefined') {
-                            let likedIds = JSON.parse(localStorage.getItem('likedCars') || '[]');
-                            if (data.favorited) {
-                                if (!likedIds.includes(carId)) likedIds.push(carId);
-                                this.isLiked = true;
-                            } else {
-                                likedIds = likedIds.filter(id => id !== carId);
-                                this.isLiked = false;
-                            }
-                            localStorage.setItem('likedCars', JSON.stringify(likedIds));
-                            window.dispatchEvent(new Event('storage'));
+                    });
+                    if (response.status === 401) {
+                        // Revert
+                        this.isLiked = !this.isLiked;
+                        window.showToast('Please log in to save cars.', 'error');
+                        
+                        let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                        currentList = currentList.filter(id => id !== carId);
+                        localStorage.setItem('likedCars', JSON.stringify(currentList));
+                        window.dispatchEvent(new Event('storage'));
+
+                        setTimeout(() => {
+                            window.location.href = '/Account/Register';
+                        }, 1000);
+                    } else if (!response.ok) {
+                        // Revert
+                        this.isLiked = !this.isLiked;
+                        window.showToast('Failed to save. Please try again.', 'error');
+
+                        let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                        if (this.isLiked) {
+                            if (!currentList.includes(carId)) currentList.push(carId);
+                        } else {
+                            currentList = currentList.filter(id => id !== carId);
                         }
-                    })
-                    .catch(err => console.error(err));
+                        localStorage.setItem('likedCars', JSON.stringify(currentList));
+                        window.dispatchEvent(new Event('storage'));
+                    }
+                } catch (err) {
+                    // Revert
+                    this.isLiked = !this.isLiked;
+                    window.showToast('A network error occurred.', 'error');
+
+                    let currentList = JSON.parse(localStorage.getItem('likedCars') || '[]');
+                    if (this.isLiked) {
+                        if (!currentList.includes(carId)) currentList.push(carId);
+                    } else {
+                        currentList = currentList.filter(id => id !== carId);
+                    }
+                    localStorage.setItem('likedCars', JSON.stringify(currentList));
+                    window.dispatchEvent(new Event('storage'));
+                }
                 </text>
             }
         },
@@ -515,13 +751,13 @@ function revvDetails(carPriceStr, carId) {
 
             const emi = (principal * ratePerMonth * Math.pow(1 + ratePerMonth, tenure)) / (Math.pow(1 + ratePerMonth, tenure) - 1);
 
-            this.loanAmount = '$' + Math.round(principal).toLocaleString();
-            this.monthlyEMI = isNaN(emi) ? '$0' : '$' + Math.round(emi).toLocaleString();
+            this.loanAmount = '₱' + Math.round(principal).toLocaleString();
+            this.monthlyEMI = isNaN(emi) ? '₱0' : '₱' + Math.round(emi).toLocaleString();
         },
 
         get formattedDownPayment() {
             const value = rawPrice * (this.downPaymentPercentage / 100);
-            return '$' + Math.round(value).toLocaleString() + ' (' + this.downPaymentPercentage + '%)';
+            return '₱' + Math.round(value).toLocaleString() + ' (' + this.downPaymentPercentage + '%)';
         },
 
         // ── Contact Dealer AJAX Submit ──
@@ -565,15 +801,6 @@ function revvDetails(carPriceStr, carId) {
             } catch (err) {
                 console.error(err);
                 this.inquiryError = "A network error occurred. Please try again.";
-            } finally {
-                this.sendingInquiry = false;
-            }
-        }
-    };
-}
-</script>
-}
-this.inquiryError = "A network error occurred. Please try again.";
             } finally {
                 this.sendingInquiry = false;
             }
