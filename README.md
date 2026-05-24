@@ -69,6 +69,7 @@ git clone https://github.com/JohnMichaelOlasiman/car-selling.git
 *   Launch **Visual Studio 2026** (or Visual Studio Preview).
 *   Select **Open a project or solution**.
 *   Navigate to the cloned directory and open `RevvUp.slnx` or the project solution.
+*   **Set the Startup Project:** In the **Solution Explorer** pane on the right-hand side, look under `src` and locate **`RevvUp.Web`**. **Right-click** on the `RevvUp.Web` project and select **Set as Startup Project**. The green play button at the top will now change to **`RevvUp.Web`** (Class libraries like `RevvUp.Application` cannot be run directly).
 
 ### Step 3 — Restore NuGet Packages
 Visual Studio will automatically restore required packages upon opening. If needed, you can restore manually via the **Package Manager Console**:
@@ -88,6 +89,10 @@ dotnet ef database update --project src/RevvUp.Infrastructure --startup-project 
 *   **OR run via terminal:**
     ```bash
     dotnet run --project src/RevvUp.Web
+    ```
+*   **Unlocking Files (Process Management):** If you run into build errors because DLL files are locked by a background run of the server, stop active debugging using **Shift + F5** in Visual Studio, or forcefully kill any orphaned background server processes by running this in a PowerShell console:
+    ```powershell
+    Stop-Process -Name "RevvUp.Web" -Force
     ```
 
 Once compiled, the application will be hosted locally at:

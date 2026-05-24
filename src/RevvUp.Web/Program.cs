@@ -65,7 +65,17 @@ using (var scope = app.Services.CreateScope())
     // Create a demo seller account and reassign all 52 existing car listings to this account (Dev only)
     if (app.Environment.IsDevelopment())
     {
-        await DbInitializer.SeedAsync(scope.ServiceProvider);
+        try
+        {
+            Console.WriteLine("=== STARTING DATABASE SEEDING ===");
+            await DbInitializer.SeedAsync(scope.ServiceProvider);
+            Console.WriteLine("=== DATABASE SEEDING COMPLETED SUCCESSFULLY ===");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"=== DATABASE SEEDING FAILED: {ex.Message} ===");
+            Console.WriteLine(ex.StackTrace);
+        }
     }
 }
 
